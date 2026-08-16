@@ -283,7 +283,7 @@ export async function readCommandImports() {
   return commandImports;
 }
 
-export const onlyNumbers = (text) => text.replace(/[^0-9]/g, "");
+export const onlyNumbers = (text) => String(text ?? "").replace(/[^0-9]/g, "");
 
 export function parseDuration(input) {
   if (typeof input !== "string") {
