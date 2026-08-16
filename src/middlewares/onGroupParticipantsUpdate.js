@@ -42,10 +42,13 @@ async function getMemberDisplay({ data, remoteJid, socket }) {
     );
 
     const phoneNumber = getKnownPhoneNumber(data, participant);
+    const username = participant?.username
+      ? String(participant.username).replace(/^@+/, "")
+      : null;
 
     return {
       mention: participant?.id || userLid,
-      number: phoneNumber || userNumber,
+      number: username || phoneNumber || userNumber,
     };
   } catch {
     return { mention: userLid, number: userNumber };
