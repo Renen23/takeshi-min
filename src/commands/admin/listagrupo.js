@@ -3,7 +3,7 @@ import { getActiveGroups } from "../../utils/database.js";
 
 export default {
   name: "listagrupo",
-  description: "Mostra a lista dos grupos onde o bot está ativo (/on).",
+  description: "Mostra os grupos ativos (/on) com link para abrir.",
   commands: ["listagrupo", "grupos", "meus-grupos", "grupos-ativos", "grupos-on"],
   usage: `${PREFIX}listagrupo`,
   /**
@@ -22,17 +22,33 @@ export default {
     const lines = [];
 
     for (const groupId of groups) {
+      let name = groupId.replace("@g.us", "");
+      let link = "";
+
       try {
         const metadata = await socket.groupMetadata(groupId);
-        const shortId = groupId.replace("@g.us", "");
-        lines.push(`▢ ${metadata.subject} (${shortId.slice(-10)})`);
+        name = metadata.subject || name;
       } catch {
-        lines.push(`▢ ${groupId}`);
+        // segue sem nome
       }
+
+      try {
+        const code = await socket.groupInviteCode(groupId);
+
+        if (code) {
+          link = `https://chat.whatsapp.com/${code}`;
+        }
+      } catch {
+        // bot não é admin: sem link
+      }
+
+      lines.push(
+        link
+          ? `${lines.length + 1}. ${name}\n   ${link}`
+          : `${lines.length + 1}. ${name}`,
+      );
     }
 
-    await sendReply(
-      `📋 *Grupos com o bot ativo:*\n\n${lines.join("\n")}`,
-    );
+    await sendReply(`📋 *Grupos com o bot ativo:*\n\n${lines.join("\n")}`);
   },
 };
