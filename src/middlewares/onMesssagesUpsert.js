@@ -3,6 +3,7 @@
  * é enviada para o grupo do WhatsApp
  */
 import { DEVELOPER_MODE } from "../config.js";
+import { handleAntiLink } from "../utils/antiLink.js";
 import { badMacHandler } from "../utils/badMacHandler.js";
 import { checkIfMemberIsMuted } from "../utils/database.js";
 import { dynamicCommand } from "../utils/dynamicCommand.js";
@@ -95,6 +96,12 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
         }
 
         return;
+      }
+
+      const handledByAntiLink = await handleAntiLink({ socket, webMessage });
+
+      if (handledByAntiLink) {
+        continue;
       }
 
       const commonFunctions = loadCommonFunctions({ socket, webMessage });

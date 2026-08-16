@@ -15,6 +15,7 @@ const databasePath = path.resolve(__dirname, "..", "..", "database");
 const EXIT_GROUPS_FILE = "exit-groups";
 const EXIT_MESSAGES_FILE = "exit-messages";
 const INACTIVE_GROUPS_FILE = "inactive-groups";
+const ANTI_LINK_GROUPS_FILE = "anti-link-groups";
 const MUTE_FILE = "muted";
 const ONLY_ADMINS_FILE = "only-admins";
 const PREFIX_GROUPS_FILE = "prefix-groups";
@@ -150,6 +151,42 @@ export function isActiveGroup(groupId) {
   const inactiveGroups = readJSON(filename);
 
   return !inactiveGroups.includes(groupId);
+}
+
+export function activateAntiLinkGroup(groupId) {
+  const filename = ANTI_LINK_GROUPS_FILE;
+
+  const antiLinkGroups = readJSON(filename);
+
+  if (!antiLinkGroups.includes(groupId)) {
+    antiLinkGroups.push(groupId);
+  }
+
+  writeJSON(filename, antiLinkGroups);
+}
+
+export function deactivateAntiLinkGroup(groupId) {
+  const filename = ANTI_LINK_GROUPS_FILE;
+
+  const antiLinkGroups = readJSON(filename);
+
+  const index = antiLinkGroups.indexOf(groupId);
+
+  if (index === -1) {
+    return;
+  }
+
+  antiLinkGroups.splice(index, 1);
+
+  writeJSON(filename, antiLinkGroups);
+}
+
+export function isActiveAntiLinkGroup(groupId) {
+  const filename = ANTI_LINK_GROUPS_FILE;
+
+  const antiLinkGroups = readJSON(filename);
+
+  return antiLinkGroups.includes(groupId);
 }
 
 export function muteMember(groupId, memberId) {
