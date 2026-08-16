@@ -4,7 +4,20 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { errorLog, warningLog } from "./logger.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const baileysFolder = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "assets",
+  "auth",
+  "baileys",
+);
 
 class BadMacHandler {
   constructor() {
@@ -35,13 +48,6 @@ class BadMacHandler {
 
   clearProblematicSessionFiles() {
     try {
-      const baileysFolder = path.resolve(
-        process.cwd(),
-        "assets",
-        "auth",
-        "baileys",
-      );
-
       if (!fs.existsSync(baileysFolder)) {
         return false;
       }
@@ -51,14 +57,20 @@ class BadMacHandler {
 
       for (const file of files) {
         const filePath = path.join(baileysFolder, file);
-        if (fs.statSync(filePath).isFile()) {
-          if (
-            file.includes("app-state-sync-key") ||
-            file === "creds.json" ||
-            file.includes("app-state-sync-version")
-          ) {
-            continue;
-          }
+
+        if (!fs.statSync(filePath).isFile()) {
+          continue;
+        }
+
+        if (file === "creds.json") {
+          continue;
+        }
+
+        try {
+          fs.unlinkSync(filePath);
+          removedCount++;
+        } catch {
+          // Ignora arquivos que não puderem ser removidos.
         }
       }
 

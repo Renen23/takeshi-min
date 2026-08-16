@@ -45,6 +45,26 @@ function formatPairingCode(code) {
   return code?.match(/.{1,4}/g)?.join("-") || code;
 }
 
+function normalizePhoneNumber(rawNumber) {
+  const digits = onlyNumbers(rawNumber);
+
+  if (!digits) {
+    return null;
+  }
+
+  // Número brasileiro sem código do país (DDD + número = 10 ou 11 dígitos).
+  if (digits.length === 10 || digits.length === 11) {
+    return `55${digits}`;
+  }
+
+  // Já veio com código do país (12+ dígitos) — usa como está.
+  if (digits.length >= 12) {
+    return digits;
+  }
+
+  return digits;
+}
+
 function clearScreenWithBanner() {
   console.clear();
   bannerLog();
@@ -97,9 +117,51 @@ export async function connect() {
       process.exit(1);
     }
 
-    const code = await socket.requestPairingCode(onlyNumbers(phoneNumber));
+    if (onlyNumbers(phoneNumber).length === 12) {
+      warningLog(
+        "Atenção: celulares brasileiros têm 13 dígitos (55 + DDD + 9 + 8).",
+      );
+      warningLog(
+        "Se o pareamento falhar, confira se não faltou um dígito no número e rode npm start novamente.",
+      );
+    }
 
-    console.log(`Código de pareamento: ${formatPairingCode(code)}`);
+    let code;
+
+    try {
+      code = await socket.requestPairingCode(normalizePhoneNumber(phoneNumber));
+    } catch (error) {
+      errorLog(
+        "Não foi possível gerar o código de pareamento. O WhatsApp recusou a conexão.",
+      );
+      errorLog(
+        "Confira se o número está correto e se é uma conta WhatsApp ativa. Depois rode npm start novamente.",
+      );
+      errorLog(`Detalhes: ${error?.message || error}`);
+
+      process.exit(1);
+    }
+
+    if (!code) {
+      errorLog(
+        "Não foi possível gerar o código de pareamento. Confira se o número é um WhatsApp válido e rode npm start novamente.",
+      );
+
+      process.exit(1);
+    }
+
+    console.log(`\nCódigo de pareamento: ${formatPairingCode(code)}`);
+    console.log("\nPassos para conectar:");
+    console.log("1. Abra o WhatsApp no celular com o número acima.");
+    console.log(
+      "2. Toque em Configurações (⚙️) -> Aparelhos conectados -> Conectar um aparelho.",
+    );
+    console.log(
+      "3. Escolha 'Conectar com número de telefone em vez do código QR'.",
+    );
+    console.log(
+      "4. Digite o código acima. IMPORTANTE: o código expira em cerca de 1 minuto!\n",
+    );
   }
 
   socket.ev.on("connection.update", async (update) => {
@@ -132,6 +194,13 @@ export async function connect() {
 
       if (statusCode === DisconnectReason.loggedOut) {
         errorLog("Bot desconectado!");
+        errorLog(
+          "Seu aparelho foi removido do WhatsApp. Para reconectar, apague a sessão e faça o pareamento novamente.",
+        );
+        warningLog(
+          'No Windows: rmdir /s /q assets\\auth  |  No Termux: rm -rf assets/auth  |  Depois: npm start',
+        );
+        process.exit(1);
       } else {
         switch (statusCode) {
           case DisconnectReason.badSession:
