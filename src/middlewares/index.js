@@ -3,7 +3,7 @@
  */
 import { delay } from "baileys";
 import { OWNER_LID } from "../config.js";
-import { getPrefix, isBotAdmin } from "../utils/database.js";
+import { getPrefix } from "../utils/database.js";
 
 export function verifyPrefix(prefix, groupJid) {
   const groupPrefix = getPrefix(groupJid);
@@ -69,7 +69,7 @@ export async function checkPermission({ type, socket, userLid, remoteJid }) {
     );
 
     if (type === "admin") {
-      return isOwner || isAdmin || isBotOwner || isBotAdmin(userLid);
+      return isOwner || isAdmin || isBotOwner;
     }
 
     if (type === "owner") {

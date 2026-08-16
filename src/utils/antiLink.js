@@ -4,7 +4,7 @@
  */
 import { OWNER_LID } from "../config.js";
 import { isAdmin } from "../middlewares/index.js";
-import { isActiveAntiLinkGroup, isBotAdmin, isTrustedUser } from "./database.js";
+import { isActiveAntiLinkGroup, isTrustedUser } from "./database.js";
 import { extractDataFromMessage, onlyNumbers } from "./index.js";
 import { errorLog } from "./logger.js";
 import { addWarn, getWarnLimit } from "./warnSystem.js";
@@ -51,7 +51,7 @@ export async function handleAntiLink({ socket, webMessage }) {
       return false;
     }
 
-    if (userLid === OWNER_LID || isBotAdmin(userLid)) {
+    if (userLid === OWNER_LID) {
       return false;
     }
 

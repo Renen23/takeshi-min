@@ -43,7 +43,6 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}on
 ▢ • ${prefix}off
 ▢ • ${prefix}set-prefix
-▢ • ${prefix}adm              Add/remove admins do bot
 ▢
 ╰━━─「👑」─━━
 
