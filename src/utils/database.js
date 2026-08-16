@@ -16,6 +16,7 @@ const EXIT_GROUPS_FILE = "exit-groups";
 const EXIT_MESSAGES_FILE = "exit-messages";
 const INACTIVE_GROUPS_FILE = "inactive-groups";
 const ANTI_LINK_GROUPS_FILE = "anti-link-groups";
+const BOT_ADMINS_FILE = "bot-admins";
 const MUTE_FILE = "muted";
 const ONLY_ADMINS_FILE = "only-admins";
 const PREFIX_GROUPS_FILE = "prefix-groups";
@@ -238,6 +239,46 @@ export function getTrustedUsers(groupId) {
   const trustedUsers = readJSON(filename, {});
 
   return trustedUsers[groupId] || [];
+}
+
+export function addBotAdmin(userLid) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, []);
+
+  if (!botAdmins.includes(userLid)) {
+    botAdmins.push(userLid);
+  }
+
+  writeJSON(filename, botAdmins);
+}
+
+export function removeBotAdmin(userLid) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, []);
+
+  const index = botAdmins.indexOf(userLid);
+
+  if (index !== -1) {
+    botAdmins.splice(index, 1);
+  }
+
+  writeJSON(filename, botAdmins);
+}
+
+export function isBotAdmin(userLid) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, []);
+
+  return botAdmins.includes(userLid);
+}
+
+export function getBotAdmins() {
+  const filename = BOT_ADMINS_FILE;
+
+  return readJSON(filename, []);
 }
 
 export function muteMember(groupId, memberId) {

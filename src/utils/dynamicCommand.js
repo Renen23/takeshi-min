@@ -20,6 +20,7 @@ import {
   getPrefix,
   isActiveGroup,
   isActiveOnlyAdmins,
+  isBotAdmin,
 } from "./database.js";
 import { findCommandImport } from "./index.js";
 import { errorLog } from "./logger.js";
@@ -71,7 +72,8 @@ export async function dynamicCommand(paramsHandler, startProcess) {
 
     if (
       isActiveOnlyAdmins(remoteJid) &&
-      !(await isAdmin({ remoteJid, userLid, socket }))
+      !(await isAdmin({ remoteJid, userLid, socket })) &&
+      !isBotAdmin(userLid)
     ) {
       await sendWarningReply(
         "Somente administradores podem executar comandos!",
