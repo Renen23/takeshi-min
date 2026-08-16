@@ -5,6 +5,7 @@ import path from "node:path";
 import pkg from "../package.json" with { type: "json" };
 import { ASSETS_DIR, BOT_EMOJI, BOT_NAME } from "./config.js";
 import { getPrefix } from "./utils/database.js";
+import { readMore } from "./utils/index.js";
 
 let kittenIndex = 0;
 
@@ -27,63 +28,52 @@ export function menuMessage(groupJid) {
   const date = currentDate.toLocaleDateString("pt-BR");
   const time = currentDate.toLocaleTimeString("pt-BR");
 
-  return `
-╭────────────────────╮
-│  ✦ CENTRAL DO ${BOT_NAME.toUpperCase()} ✦
-╰────────────────────╯
+  return `╭━━⪩ BEM VINDO! ⪨━━${readMore()}
+▢
+▢ • ${BOT_NAME} ${BOT_EMOJI}
+▢ • Data: ${date}
+▢ • Hora: ${time}
+▢ • Prefixo: ${prefix}
+▢ • Versão: ${pkg.version}
+▢
+╰━━─「💎」─━━
 
-Olá! Eu sou o ${BOT_NAME}.
-Estou pronto para ajudar no grupo.
+╭━━⪩ DONO ⪨━━
+▢
+▢ • ${prefix}on
+▢ • ${prefix}off
+▢ • ${prefix}set-prefix
+▢
+╰━━─「👑」─━━
 
-┌─「 INFORMAÇÕES 」
-│
-│  ◈ Nome: ${BOT_NAME}
-│  ◈ Data: ${date}
-│  ◈ Horário: ${time}
-│  ◈ Prefixo: ${prefix}
-│  ◈ Versão: ${pkg.version}
-│
-└────────────────────
+╭━━⪩ ADMINS ⪨━━
+▢
+▢ • ${prefix}abrir
+▢ • ${prefix}fechar
+▢ • ${prefix}ban
+▢ • ${prefix}delete
+▢ • ${prefix}promover
+▢ • ${prefix}rebaixar
+▢ • ${prefix}set-exit
+▢ • ${prefix}set-welcome
+▢ • ${prefix}mute
+▢ • ${prefix}unmute
+▢ • ${prefix}warn
+▢ • ${prefix}unwarn
+▢ • ${prefix}limpar-chat
+▢ • ${prefix}link-grupo
+▢ • ${prefix}welcome (1/0)
+▢ • ${prefix}only-admin (1/0)
+▢
+╰━━─「⭐」─━━
 
-┌─「 CONTROLO DO DONO 」
-│
-│  ${prefix}on             Ativar o bot
-│  ${prefix}off            Desativar o bot
-│  ${prefix}set-prefix     Alterar o prefixo
-│
-└────────────────────
+╭━━⪩ PRINCIPAL ⪨━━
+▢
+▢ • ${prefix}menu
+▢ • ${prefix}ping
+▢ • ${prefix}meu-lid
+▢
+╰━━─「🐱」─━━
 
-┌─「 FERRAMENTAS DA ADMINISTRAÇÃO 」
-│
-│  ${prefix}abrir           Abrir o grupo
-│  ${prefix}fechar          Fechar o grupo
-│  ${prefix}ban             Remover membro
-│  ${prefix}delete          Apagar mensagem
-│  ${prefix}promover        Promover administrador
-│  ${prefix}rebaixar        Remover administrador
-│  ${prefix}set-exit        Alterar mensagem de saída
-│  ${prefix}set-welcome     Alterar mensagem de boas-vindas
-│  ${prefix}mute             Silenciar membro
-│  ${prefix}unmute           Retirar silêncio
-│  ${prefix}warn             Aplicar advertência
-│  ${prefix}unwarn           Remover advertência
-│  ${prefix}limpar-chat      Limpar o chat
-│  ${prefix}link-grupo       Obter link do grupo
-│  ${prefix}welcome (1/0)    Ativar boas-vindas
-│  ${prefix}only-admin (1/0) Restringir aos admins
-│
-└────────────────────
-
-┌─「 COMANDOS RÁPIDOS 」
-│
-│  ${prefix}menu             Abrir este painel
-│  ${prefix}ping             Verificar resposta
-│  ${prefix}meu-lid          Consultar o seu LID
-│
-└────────────────────
-
-╭────────────────────╮
-│  Feito com carinho por Renen
-│  ${BOT_EMOJI} ${BOT_NAME} • Gatinho do momento
-╰────────────────────╯`;
+Feito com carinho por Renen • ${BOT_EMOJI} ${BOT_NAME}`;
 }
