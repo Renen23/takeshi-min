@@ -70,6 +70,10 @@ export default {
 
       for (const cmd of commands) {
         text += `▢ ${prefix}${cmd.commands[0]} — ${cmd.description || ""}\n`;
+
+        if (cmd.usage && cmd.usage !== `${prefix}${cmd.commands[0]}`) {
+          text += `   🔧 ${cmd.usage}\n`;
+        }
       }
 
       text += `╰━━─┄─━━\n\n`;

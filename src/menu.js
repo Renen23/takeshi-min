@@ -68,7 +68,7 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}anti-link (1/0)
 ▢ • ${prefix}confiavel        Lista/libera membros do anti-link
 ▢ • ${prefix}painel           Painel do admin no privado
-▢ • ${prefix}only-admin (1/0)
+▢ • ${prefix}listagrupo       Lista os grupos com o bot ativo
 ▢
 ╰━━─「⭐」─━━
 
@@ -82,6 +82,7 @@ export function menuMessage(groupJid) {
 ╰━━─「🐶」─━━
 
 ⚠️ Só o dono (e quem ele liberar com ${prefix}adm) usa meus comandos.
+Em grupos sem ${prefix}on o bot fica mudo — ninguém recebe resposta.
 
 Feito com carinho por Renen • ${BOT_EMOJI} ${BOT_NAME}`;
 }

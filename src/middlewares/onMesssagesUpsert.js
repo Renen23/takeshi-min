@@ -5,7 +5,7 @@
 import { DEVELOPER_MODE } from "../config.js";
 import { handleAntiLink } from "../utils/antiLink.js";
 import { badMacHandler } from "../utils/badMacHandler.js";
-import { checkIfMemberIsMuted } from "../utils/database.js";
+import { checkIfMemberIsMuted, isActiveGroup } from "../utils/database.js";
 import { dynamicCommand } from "../utils/dynamicCommand.js";
 import {
   GROUP_PARTICIPANT_ADD,
@@ -51,6 +51,8 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
         continue;
       }
 
+      const groupActive = isActiveGroup(webMessage?.key?.remoteJid);
+
       const timestamp = webMessage.messageTimestamp;
 
       if (isAtLeastMinutesInPast(timestamp)) {
@@ -85,6 +87,7 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
       }
 
       if (
+        groupActive &&
         checkIfMemberIsMuted(
           webMessage?.key?.remoteJid,
           webMessage?.key?.participant?.replace(/:[0-9][0-9]|:[0-9]/g, ""),
@@ -110,7 +113,9 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
         return;
       }
 
-      const handledByAntiLink = await handleAntiLink({ socket, webMessage });
+      const handledByAntiLink = groupActive
+        ? await handleAntiLink({ socket, webMessage })
+        : false;
 
       if (handledByAntiLink) {
         continue;

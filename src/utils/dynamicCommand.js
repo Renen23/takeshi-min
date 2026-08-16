@@ -11,16 +11,10 @@ import {
 import {
   checkPermission,
   hasTypeAndCommand,
-  isAdmin,
-  isBotOwner,
   verifyPrefix,
 } from "../middlewares/index.js";
 import { badMacHandler } from "./badMacHandler.js";
-import {
-  getPrefix,
-  isActiveGroup,
-  isActiveOnlyAdmins,
-} from "./database.js";
+import { getPrefix, isActiveGroup } from "./database.js";
 import { findCommandImport } from "./index.js";
 import { errorLog } from "./logger.js";
 
@@ -34,8 +28,6 @@ export async function dynamicCommand(paramsHandler, startProcess) {
     sendReact,
     sendReply,
     sendWarningReply,
-    socket,
-    userLid,
   } = paramsHandler;
 
   const activeGroup = isActiveGroup(remoteJid);
@@ -46,7 +38,22 @@ export async function dynamicCommand(paramsHandler, startProcess) {
     return;
   }
 
-  if (activeGroup) {
+  if (!activeGroup) {
+    // Bot "morto" em grupos não ativados: só o /on responde,
+    // e apenas para o dono ou quem ele autorizou. Ninguém mais
+    // recebe nenhuma resposta.
+    if (
+      !verifyPrefix(prefix, remoteJid) ||
+      !hasTypeAndCommand({ type, command }) ||
+      command.name !== "on"
+    ) {
+      return;
+    }
+
+    if (!(await checkPermission({ type, ...paramsHandler }))) {
+      return;
+    }
+  } else {
     if (
       !verifyPrefix(prefix, remoteJid) ||
       !hasTypeAndCommand({ type, command })
@@ -62,43 +69,8 @@ export async function dynamicCommand(paramsHandler, startProcess) {
       return;
     }
 
+    // Silêncio total para quem não foi autorizado pelo dono.
     if (!(await checkPermission({ type, ...paramsHandler }))) {
-      await sendErrorReply(
-        "Você não tem permissão para executar este comando!",
-      );
-      return;
-    }
-
-    if (
-      isActiveOnlyAdmins(remoteJid) &&
-      !(await isAdmin({ remoteJid, userLid, socket }))
-    ) {
-      await sendWarningReply(
-        "Somente administradores podem executar comandos!",
-      );
-      return;
-    }
-  }
-
-  if (!isBotOwner({ userLid, webMessage: paramsHandler.webMessage }) && !activeGroup) {
-    if (
-      verifyPrefix(prefix, remoteJid) &&
-      hasTypeAndCommand({ type, command })
-    ) {
-      if (command.name !== "on") {
-        await sendWarningReply(
-          "Este grupo está desativado! Peça para o dono do grupo ativar o bot!",
-        );
-        return;
-      }
-
-      if (!(await checkPermission({ type, ...paramsHandler }))) {
-        await sendErrorReply(
-          "Você não tem permissão para executar este comando!",
-        );
-        return;
-      }
-    } else {
       return;
     }
   }

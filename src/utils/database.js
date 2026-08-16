@@ -15,7 +15,7 @@ const databasePath = path.resolve(__dirname, "..", "..", "database");
 
 const EXIT_GROUPS_FILE = "exit-groups";
 const EXIT_MESSAGES_FILE = "exit-messages";
-const INACTIVE_GROUPS_FILE = "inactive-groups";
+const ACTIVE_GROUPS_FILE = "active-groups";
 const ANTI_LINK_GROUPS_FILE = "anti-link-groups";
 const MUTE_FILE = "muted";
 const ONLY_ADMINS_FILE = "only-admins";
@@ -122,39 +122,45 @@ export function isActiveWelcomeGroup(groupId) {
 }
 
 export function activateGroup(groupId) {
-  const filename = INACTIVE_GROUPS_FILE;
+  const filename = ACTIVE_GROUPS_FILE;
 
-  const inactiveGroups = readJSON(filename);
+  const activeGroups = readJSON(filename, []);
 
-  const index = inactiveGroups.indexOf(groupId);
+  if (!activeGroups.includes(groupId)) {
+    activeGroups.push(groupId);
+  }
+
+  writeJSON(filename, activeGroups);
+}
+
+export function deactivateGroup(groupId) {
+  const filename = ACTIVE_GROUPS_FILE;
+
+  const activeGroups = readJSON(filename, []);
+
+  const index = activeGroups.indexOf(groupId);
 
   if (index === -1) {
     return;
   }
 
-  inactiveGroups.splice(index, 1);
+  activeGroups.splice(index, 1);
 
-  writeJSON(filename, inactiveGroups);
-}
-
-export function deactivateGroup(groupId) {
-  const filename = INACTIVE_GROUPS_FILE;
-
-  const inactiveGroups = readJSON(filename);
-
-  if (!inactiveGroups.includes(groupId)) {
-    inactiveGroups.push(groupId);
-  }
-
-  writeJSON(filename, inactiveGroups);
+  writeJSON(filename, activeGroups);
 }
 
 export function isActiveGroup(groupId) {
-  const filename = INACTIVE_GROUPS_FILE;
+  const filename = ACTIVE_GROUPS_FILE;
 
-  const inactiveGroups = readJSON(filename);
+  const activeGroups = readJSON(filename, []);
 
-  return !inactiveGroups.includes(groupId);
+  return activeGroups.includes(groupId);
+}
+
+export function getActiveGroups() {
+  const filename = ACTIVE_GROUPS_FILE;
+
+  return readJSON(filename, []);
 }
 
 export function activateAntiLinkGroup(groupId) {
