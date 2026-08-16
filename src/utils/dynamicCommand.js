@@ -80,7 +80,7 @@ export async function dynamicCommand(paramsHandler, startProcess) {
     }
   }
 
-  if (!isBotOwner({ userLid }) && !activeGroup) {
+  if (!isBotOwner({ userLid, webMessage: paramsHandler.webMessage }) && !activeGroup) {
     if (
       verifyPrefix(prefix, remoteJid) &&
       hasTypeAndCommand({ type, command })

@@ -40,11 +40,19 @@ export async function isAdmin({ remoteJid, userLid, socket }) {
   return isOwner || isAdmin;
 }
 
-export function isBotOwner({ userLid }) {
+export function isBotOwner({ userLid, webMessage }) {
+  if (webMessage?.key?.fromMe) {
+    return true;
+  }
+
   return onlyNumbers(userLid) === onlyNumbers(OWNER_LID);
 }
 
-export async function checkPermission({ type, userLid, remoteJid }) {
+export async function checkPermission({ type, userLid, remoteJid, webMessage }) {
+  if (webMessage?.key?.fromMe) {
+    return true;
+  }
+
   if (onlyNumbers(userLid) === onlyNumbers(OWNER_LID)) {
     return true;
   }
