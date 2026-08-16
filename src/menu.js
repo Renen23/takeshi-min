@@ -1,60 +1,87 @@
 /**
  * Menu do bot
  */
+import path from "node:path";
 import pkg from "../package.json" with { type: "json" };
-import { BOT_NAME } from "./config.js";
+import { ASSETS_DIR, BOT_EMOJI, BOT_NAME } from "./config.js";
 import { getPrefix } from "./utils/database.js";
-import { readMore } from "./utils/index.js";
+
+let kittenIndex = 0;
+
+const kittenImages = [1, 2, 3, 4, 5].map((n) =>
+  path.join(ASSETS_DIR, "images", "gatinhos", `gato-0${n}.png`),
+);
+
+export function getNextKitten() {
+  const selectedImage = kittenImages[kittenIndex];
+
+  kittenIndex = (kittenIndex + 1) % kittenImages.length;
+
+  return selectedImage;
+}
 
 export function menuMessage(groupJid) {
-  const date = new Date();
-
+  const currentDate = new Date();
   const prefix = getPrefix(groupJid);
 
-  return `╭━━⪩ BEM VINDO! ⪨━━${readMore()}
-▢
-▢ • ${BOT_NAME}
-▢ • Data: ${date.toLocaleDateString("pt-br")}
-▢ • Hora: ${date.toLocaleTimeString("pt-br")}
-▢ • Prefixo: ${prefix}
-▢ • Versão: ${pkg.version}
-▢
-╰━━─「🪐」─━━
+  const date = currentDate.toLocaleDateString("pt-BR");
+  const time = currentDate.toLocaleTimeString("pt-BR");
 
-╭━━⪩ DONO ⪨━━
-▢
-▢ • ${prefix}off
-▢ • ${prefix}on
-▢ • ${prefix}set-prefix
-▢
-╰━━─「🌌」─━━
+  return `
+╭────────────────────╮
+│  ✦ CENTRAL DO ${BOT_NAME.toUpperCase()} ✦
+╰────────────────────╯
 
-╭━━⪩ ADMINS ⪨━━
-▢
-▢ • ${prefix}abrir
-▢ • ${prefix}ban
-▢ • ${prefix}delete
-▢ • ${prefix}exit (1/0)
-▢ • ${prefix}fechar
-▢ • ${prefix}limpar-chat
-▢ • ${prefix}link-grupo
-▢ • ${prefix}mute
-▢ • ${prefix}only-admin (1/0)
-▢ • ${prefix}promover
-▢ • ${prefix}rebaixar
-▢ • ${prefix}unmute
-▢ • ${prefix}warn
-▢ • ${prefix}unwarn
-▢ • ${prefix}warn-reactivate
-▢ • ${prefix}welcome (1/0)
-▢
-╰━━─「⭐」─━━
+Olá! Eu sou o ${BOT_NAME}.
+Estou pronto para ajudar no grupo.
 
-╭━━⪩ PRINCIPAL ⪨━━
-▢
-▢ • ${prefix}menu
-▢ • ${prefix}meu-lid
-▢ • ${prefix}ping
-▢
-╰━━─「🚀」─━━`;
+┌─「 INFORMAÇÕES 」
+│
+│  ◈ Nome: ${BOT_NAME}
+│  ◈ Data: ${date}
+│  ◈ Horário: ${time}
+│  ◈ Prefixo: ${prefix}
+│  ◈ Versão: ${pkg.version}
+│
+└────────────────────
+
+┌─「 CONTROLO DO DONO 」
+│
+│  ${prefix}on             Ativar o bot
+│  ${prefix}off            Desativar o bot
+│  ${prefix}set-prefix     Alterar o prefixo
+│
+└────────────────────
+
+┌─「 FERRAMENTAS DA ADMINISTRAÇÃO 」
+│
+│  ${prefix}abrir           Abrir o grupo
+│  ${prefix}fechar          Fechar o grupo
+│  ${prefix}ban             Remover membro
+│  ${prefix}delete          Apagar mensagem
+│  ${prefix}promover        Promover administrador
+│  ${prefix}rebaixar        Remover administrador
+│  ${prefix}mute             Silenciar membro
+│  ${prefix}unmute           Retirar silêncio
+│  ${prefix}warn             Aplicar advertência
+│  ${prefix}unwarn           Remover advertência
+│  ${prefix}limpar-chat      Limpar o chat
+│  ${prefix}link-grupo       Obter link do grupo
+│  ${prefix}welcome (1/0)    Ativar boas-vindas
+│  ${prefix}only-admin (1/0) Restringir aos admins
+│
+└────────────────────
+
+┌─「 COMANDOS RÁPIDOS 」
+│
+│  ${prefix}menu             Abrir este painel
+│  ${prefix}ping             Verificar resposta
+│  ${prefix}meu-lid          Consultar o seu LID
+│
+└────────────────────
+
+╭────────────────────╮
+│  Feito com carinho por Renen
+│  ${BOT_EMOJI} ${BOT_NAME} • Gatinho do momento
+╰────────────────────╯`;
 }

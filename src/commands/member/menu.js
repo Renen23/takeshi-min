@@ -1,6 +1,7 @@
+import fs from "node:fs";
 import path from "node:path";
 import { ASSETS_DIR, PREFIX } from "../../config.js";
-import { menuMessage } from "../../menu.js";
+import { getNextKitten, menuMessage } from "../../menu.js";
 
 export default {
   name: "menu",
@@ -10,17 +11,15 @@ export default {
   /**
    * @param {CommandHandleProps} props
    */
-  handle: async ({
-    remoteJid,
-    sendSuccessReact,
-    sendImageFromFile,
-    sendGifFromFile,
-  }) => {
+  handle: async ({ remoteJid, sendSuccessReact, sendImageFromFile }) => {
     await sendSuccessReact();
 
-    await sendImageFromFile(
-      path.join(ASSETS_DIR, "images", "takeshi-bot.png"),
-      `\n\n${menuMessage(remoteJid)}`,
-    );
+    let imagePath = getNextKitten();
+
+    if (!fs.existsSync(imagePath)) {
+      imagePath = path.join(ASSETS_DIR, "images", "takeshi-bot.png");
+    }
+
+    await sendImageFromFile(imagePath, `\n\n${menuMessage(remoteJid)}`);
   },
 };
