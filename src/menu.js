@@ -63,6 +63,7 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}limpar-chat
 ▢ • ${prefix}link-grupo
 ▢ • ${prefix}welcome (1/0)
+▢ • ${prefix}exit (1/0)
 ▢ • ${prefix}only-admin (1/0)
 ▢
 ╰━━─「⭐」─━━
