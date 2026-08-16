@@ -4,6 +4,8 @@
  */
 import { exitMessage, welcomeMessage } from "../messages.js";
 import {
+  getExitMessage,
+  getWelcomeMessage,
   isActiveExitGroup,
   isActiveGroup,
   isActiveWelcomeGroup,
@@ -29,14 +31,16 @@ export async function onGroupParticipantsUpdate({
     const userLid = extractUserLid(data);
 
     if (isActiveWelcomeGroup(remoteJid) && action === "add") {
-      const hasMemberMention = welcomeMessage.includes("@member");
+      const welcomeText = getWelcomeMessage(remoteJid) || welcomeMessage;
+
+      const hasMemberMention = welcomeText.includes("@member");
 
       const mentions = [];
-      let finalWelcomeMessage = welcomeMessage;
+      let finalWelcomeMessage = welcomeText;
 
       if (hasMemberMention) {
         const userNumber = onlyNumbers(userLid);
-        finalWelcomeMessage = welcomeMessage.replace(
+        finalWelcomeMessage = welcomeText.replace(
           "@member",
           `@${userNumber}`,
         );
@@ -48,14 +52,16 @@ export async function onGroupParticipantsUpdate({
         mentions,
       });
     } else if (isActiveExitGroup(remoteJid) && action === "remove") {
-      const hasMemberMention = exitMessage.includes("@member");
+      const exitText = getExitMessage(remoteJid) || exitMessage;
+
+      const hasMemberMention = exitText.includes("@member");
 
       const mentions = [];
-      let finalExitMessage = exitMessage;
+      let finalExitMessage = exitText;
 
       if (hasMemberMention) {
         const userNumber = onlyNumbers(userLid);
-        finalExitMessage = exitMessage.replace("@member", `@${userNumber}`);
+        finalExitMessage = exitText.replace("@member", `@${userNumber}`);
         mentions.push(userLid);
       }
 

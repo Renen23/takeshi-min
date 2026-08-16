@@ -61,6 +61,8 @@ Estou pronto para ajudar no grupo.
 │  ${prefix}delete          Apagar mensagem
 │  ${prefix}promover        Promover administrador
 │  ${prefix}rebaixar        Remover administrador
+│  ${prefix}set-exit        Alterar mensagem de saída
+│  ${prefix}set-welcome     Alterar mensagem de boas-vindas
 │  ${prefix}mute             Silenciar membro
 │  ${prefix}unmute           Retirar silêncio
 │  ${prefix}warn             Aplicar advertência

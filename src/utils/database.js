@@ -13,11 +13,13 @@ const __dirname = path.dirname(__filename);
 const databasePath = path.resolve(__dirname, "..", "..", "database");
 
 const EXIT_GROUPS_FILE = "exit-groups";
+const EXIT_MESSAGES_FILE = "exit-messages";
 const INACTIVE_GROUPS_FILE = "inactive-groups";
 const MUTE_FILE = "muted";
 const ONLY_ADMINS_FILE = "only-admins";
 const PREFIX_GROUPS_FILE = "prefix-groups";
 const WELCOME_GROUPS_FILE = "welcome-groups";
+const WELCOME_MESSAGES_FILE = "welcome-messages";
 
 function createIfNotExists(fullPath, formatIfNotExists = []) {
   if (!fs.existsSync(fullPath)) {
@@ -246,4 +248,68 @@ export function getPrefix(groupJid) {
   const prefixGroups = readJSON(filename, {});
 
   return prefixGroups[groupJid] || PREFIX;
+}
+
+export function setWelcomeMessage(groupId, message) {
+  const filename = WELCOME_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  messages[groupId] = message;
+
+  writeJSON(filename, messages, {});
+}
+
+export function getWelcomeMessage(groupId) {
+  const filename = WELCOME_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  return messages[groupId] || null;
+}
+
+export function resetWelcomeMessage(groupId) {
+  const filename = WELCOME_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  if (!messages[groupId]) {
+    return;
+  }
+
+  delete messages[groupId];
+
+  writeJSON(filename, messages, {});
+}
+
+export function setExitMessage(groupId, message) {
+  const filename = EXIT_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  messages[groupId] = message;
+
+  writeJSON(filename, messages, {});
+}
+
+export function getExitMessage(groupId) {
+  const filename = EXIT_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  return messages[groupId] || null;
+}
+
+export function resetExitMessage(groupId) {
+  const filename = EXIT_MESSAGES_FILE;
+
+  const messages = readJSON(filename, {});
+
+  if (!messages[groupId]) {
+    return;
+  }
+
+  delete messages[groupId];
+
+  writeJSON(filename, messages, {});
 }
