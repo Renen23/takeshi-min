@@ -36,6 +36,12 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
     }
 
     try {
+      if (!webMessage?.key?.remoteJid?.endsWith("@g.us")) {
+        continue;
+      }
+
+      const groupActive = isActiveGroup(webMessage?.key?.remoteJid);
+
       const senderNumber =
         onlyNumbers(webMessage?.key?.participant) ||
         onlyNumbers(webMessage?.key?.remoteJid);
@@ -45,13 +51,9 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
         webMessage?.message?.extendedTextMessage?.text ||
         "(sem texto)";
 
-      console.log(`[MSG] user=${senderNumber} | ${receivedText}`);
-
-      if (!webMessage?.key?.remoteJid?.endsWith("@g.us")) {
-        continue;
+      if (groupActive) {
+        console.log(`[MSG] user=${senderNumber} | ${receivedText}`);
       }
-
-      const groupActive = isActiveGroup(webMessage?.key?.remoteJid);
 
       const timestamp = webMessage.messageTimestamp;
 
@@ -59,7 +61,7 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
         continue;
       }
 
-      if (isAddOrLeave.includes(webMessage.messageStubType)) {
+      if (groupActive && isAddOrLeave.includes(webMessage.messageStubType)) {
         let action = "";
         if (webMessage.messageStubType === GROUP_PARTICIPANT_ADD) {
           action = "add";
