@@ -16,6 +16,7 @@ import {
   isBotAdmin,
 } from "../utils/database.js";
 import { extractUserLid, onlyNumbers } from "../utils/index.js";
+import { getLidInfo } from "../utils/lidCache.js";
 import { errorLog } from "../utils/logger.js";
 
 function getParticipantId(data) {
@@ -46,9 +47,22 @@ async function getMemberDisplay({ data, remoteJid, socket }) {
       ? String(participant.username).replace(/^@+/, "")
       : null;
 
+    const cached = getLidInfo(userLid);
+    const cachedName = cached?.notify || cached?.name || cached?.verifiedName;
+    const cachedUsername = cached?.username
+      ? String(cached.username).replace(/^@+/, "")
+      : null;
+    const cachedPhone = cached?.phoneNumber || null;
+
     return {
       mention: participant?.id || userLid,
-      number: username || phoneNumber || userNumber,
+      number:
+        cachedName ||
+        cachedUsername ||
+        username ||
+        phoneNumber ||
+        cachedPhone ||
+        userNumber,
     };
   } catch {
     return { mention: userLid, number: userNumber };

@@ -14,6 +14,7 @@ import pino from "pino";
 import { PREFIX, TEMP_DIR } from "./config.js";
 import { load } from "./loader.js";
 import { badMacHandler } from "./utils/badMacHandler.js";
+import { cacheContacts } from "./utils/lidCache.js";
 import { onlyNumbers, question } from "./utils/index.js";
 import {
   bannerLog,
@@ -262,6 +263,10 @@ O prefixo padrão definido no config.js é ${PREFIX}`,
   });
 
   socket.ev.on("creds.update", saveCreds);
+
+  socket.ev.on("contacts.upsert", (contacts) => {
+    cacheContacts(contacts);
+  });
 
   return socket;
 }
