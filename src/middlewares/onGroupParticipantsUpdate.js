@@ -16,119 +16,7 @@ import {
   isBotAdmin,
 } from "../utils/database.js";
 import { extractUserLid, onlyNumbers } from "../utils/index.js";
-import { getLidInfo } from "../utils/lidCache.js";
 import { errorLog } from "../utils/logger.js";
-
-function getParticipantId(data) {
-  if (typeof data === "string") return data;
-  return data?.id || data?.jid || data?.participant || data?.participantAlt || null;
-}
-
-async function getMemberDisplay({ data, remoteJid, socket }) {
-  const userLid = getParticipantId(data) || extractUserLid(data);
-
-  if (!userLid) {
-    return { mention: null, number: null };
-  }
-
-  const userNumber = onlyNumbers(userLid);
-
-  try {
-    const metadata = await socket.groupMetadata(remoteJid);
-
-    const participant = metadata.participants?.find(
-      (item) =>
-        onlyNumbers(item.id) === userNumber ||
-        onlyNumbers(item.lid) === userNumber,
-    );
-
-    const phoneNumber = getKnownPhoneNumber(data, participant);
-    const username = participant?.username
-      ? String(participant.username).replace(/^@+/, "")
-      : null;
-
-    const cached = getLidInfo(userLid);
-    const cachedName = cached?.notify || cached?.name || cached?.verifiedName;
-    const cachedUsername = cached?.username
-      ? String(cached.username).replace(/^@+/, "")
-      : null;
-    const cachedPhone = cached?.phoneNumber || null;
-
-    return {
-      mention: participant?.id || userLid,
-      number:
-        cachedName ||
-        cachedUsername ||
-        username ||
-        phoneNumber ||
-        cachedPhone ||
-        userNumber,
-    };
-  } catch {
-    return { mention: userLid, number: userNumber };
-  }
-}
-
-function getKnownPhoneNumber(data, participant) {
-  const candidates = [
-    data?.phoneNumber,
-    data?.phone,
-    data?.id,
-    data?.jid,
-    data?.participant,
-    data?.participantAlt,
-    participant?.phoneNumber,
-    participant?.phone,
-    participant?.id,
-    participant?.jid,
-    participant?.participantAlt,
-  ];
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const value = String(candidate);
-    const number = onlyNumbers(value);
-    if (number && !value.endsWith("@lid")) return number;
-  }
-
-  return null;
-}
-
-async function removeForeignParticipant({ data, remoteJid, socket }) {
-  if (!isActiveAntifakeGroup(remoteJid)) return false;
-
-  const userLid = getParticipantId(data) || extractUserLid(data);
-  if (!userLid) return false;
-
-  const metadata = await socket.groupMetadata(remoteJid);
-  const participant = metadata.participants?.find((item) =>
-    onlyNumbers(item.id) === onlyNumbers(userLid) ||
-    onlyNumbers(item.lid) === onlyNumbers(userLid),
-  );
-  const phoneNumber = getKnownPhoneNumber(data, participant);
-
-  // Se o WhatsApp só disponibilizar o LID, não removemos ninguém por engano.
-  if (!phoneNumber) return false;
-
-  const isProtected =
-    onlyNumbers(userLid) === onlyNumbers(BOT_LID) ||
-    onlyNumbers(userLid) === onlyNumbers(OWNER_LID) ||
-    isBotAdmin(remoteJid, userLid) ||
-    getBotAdmins(remoteJid).some(
-      (stored) => onlyNumbers(stored) === onlyNumbers(phoneNumber),
-    ) ||
-    (await isAdmin({ remoteJid, userLid, socket }));
-
-  if (isProtected || phoneNumber.startsWith("55")) return false;
-
-  const targetId = participant?.id || userLid;
-  await socket.groupParticipantsUpdate(remoteJid, [targetId], "remove");
-  await socket.sendMessage(remoteJid, {
-    text: `🚫 @${onlyNumbers(phoneNumber)} removido pelo antifake.\nApenas números brasileiros com indicativo 55 são permitidos.`,
-    mentions: [targetId],
-  });
-  return true;
-}
 
 export async function onGroupParticipantsUpdate({
   data,
@@ -145,54 +33,101 @@ export async function onGroupParticipantsUpdate({
       return;
     }
 
-    if (action === "add" && (await removeForeignParticipant({ data, remoteJid, socket }))) {
+    const userLid = extractUserLid(data);
+
+    if (!userLid) {
       return;
     }
 
-    if (isActiveWelcomeGroup(remoteJid) && action === "add") {
-      const welcomeText = getWelcomeMessage(remoteJid) || welcomeMessage;
+    if (action === "add") {
+      if (isActiveAntifakeGroup(remoteJid)) {
+        try {
+          const metadata = await socket.groupMetadata(remoteJid);
+          const participant = metadata.participants?.find(
+            (item) =>
+              onlyNumbers(item.id) === onlyNumbers(userLid) ||
+              onlyNumbers(item.lid) === onlyNumbers(userLid),
+          );
 
-      const hasMemberMention = welcomeText.includes("@member");
+          let phoneNumber = null;
+          const candidates = [
+            data?.phoneNumber,
+            data?.phone,
+            data?.id,
+            data?.jid,
+            data?.participant,
+            data?.participantAlt,
+            participant?.phoneNumber,
+            participant?.phone,
+            participant?.id,
+            participant?.jid,
+            participant?.participantAlt,
+          ];
 
-      const mentions = [];
-      let finalWelcomeMessage = welcomeText;
+          for (const candidate of candidates) {
+            if (!candidate) continue;
+            const value = String(candidate);
+            const number = onlyNumbers(value);
+            if (number && !value.endsWith("@lid")) {
+              phoneNumber = number;
+              break;
+            }
+          }
 
-      if (hasMemberMention) {
-        const { mention, number } = await getMemberDisplay({
-          data,
-          remoteJid,
-          socket,
-        });
-        finalWelcomeMessage = welcomeText.replace("@member", `@${number}`);
-        if (mention) mentions.push(mention);
+          if (phoneNumber) {
+            const isProtected =
+              onlyNumbers(userLid) === onlyNumbers(BOT_LID) ||
+              onlyNumbers(userLid) === onlyNumbers(OWNER_LID) ||
+              isBotAdmin(remoteJid, userLid) ||
+              getBotAdmins(remoteJid).some(
+                (stored) => onlyNumbers(stored) === onlyNumbers(phoneNumber),
+              ) ||
+              (await isAdmin({ remoteJid, userLid, socket }));
+
+            if (!isProtected && !phoneNumber.startsWith("55")) {
+              const targetId = participant?.id || userLid;
+              await socket.groupParticipantsUpdate(remoteJid, [targetId], "remove");
+              await socket.sendMessage(remoteJid, {
+                text: `🚫 @${onlyNumbers(phoneNumber)} removido pelo antifake.\nApenas números brasileiros com indicativo 55 são permitidos.`,
+                mentions: [targetId],
+              });
+              return;
+            }
+          }
+        } catch {
+          // Se falhar, ignora e continua
+        }
       }
 
-      await socket.sendMessage(remoteJid, {
-        text: finalWelcomeMessage,
-        mentions,
-      });
-    } else if (isActiveExitGroup(remoteJid) && action === "remove") {
-      const exitText = getExitMessage(remoteJid) || exitMessage;
+      if (isActiveWelcomeGroup(remoteJid)) {
+        const welcomeText = getWelcomeMessage(remoteJid) || welcomeMessage;
+        const hasMemberMention = welcomeText.includes("@member");
 
+        if (hasMemberMention) {
+          const userNumber = onlyNumbers(userLid);
+          const finalWelcomeMessage = welcomeText.replace("@member", `@${userNumber}`);
+          await socket.sendMessage(remoteJid, {
+            text: finalWelcomeMessage,
+            mentions: [userLid],
+          });
+        } else {
+          await socket.sendMessage(remoteJid, { text: welcomeText });
+        }
+      }
+    } else if (action === "remove" && isActiveExitGroup(remoteJid)) {
+      const exitText = getExitMessage(remoteJid) || exitMessage;
       const hasMemberMention = exitText.includes("@member");
 
-      const mentions = [];
-      let finalExitMessage = exitText;
-
       if (hasMemberMention) {
-        const { mention, number } = await getMemberDisplay({
-          data,
-          remoteJid,
-          socket,
+        const userNumber = onlyNumbers(userLid);
+        const finalExitMessage = exitText.replace("@member", `@${userNumber}`);
+        await socket.sendMessage(remoteJid, {
+          text: finalExitMessage,
+          mentions: [userLid],
         });
-        finalExitMessage = exitText.replace("@member", `@${number}`);
-        if (mention) mentions.push(mention);
+      } else {
+        await socket.sendMessage(remoteJid, { text: exitText });
       }
-
-      await socket.sendMessage(remoteJid, {
-        text: finalExitMessage,
-        mentions,
-      });
     }
   } catch (error) {
     errorLog(`Erro em onGroupParticipantsUpdate: ${error.message}`);
