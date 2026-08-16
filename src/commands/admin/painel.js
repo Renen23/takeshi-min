@@ -60,7 +60,6 @@ function buildPanel(metadata, groupJid) {
 ╭━━⪩ RESTRIÇÕES ⪨━━
 ▢ ${prefix}anti-link (1/0)
 ▢ ${prefix}confiavel
-▢ ${prefix}only-admin (1/0)
 ▢ ${prefix}welcome (1/0)
 ▢ ${prefix}exit (1/0)
 ▢ ${prefix}set-welcome / ${prefix}set-exit

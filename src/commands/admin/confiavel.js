@@ -18,7 +18,7 @@ export default {
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     isReply,
     replyLid,
     remoteJid,
@@ -30,7 +30,7 @@ export default {
       throw new WarningError("Este comando só pode ser usado em grupos.");
     }
 
-    const commandWord = args.length ? args[0] : "";
+    const commandWord = words.length ? words[0] : "";
     const normalized = removeAccentsAndSpecialCharacters(commandWord.toLowerCase());
 
     if (!commandWord) {
@@ -79,7 +79,7 @@ export default {
       normalized,
     );
 
-    const mention = args.find((arg) => arg.includes("@"));
+    const mention = words.find((arg) => arg.includes("@"));
     const targetLid = isReply ? replyLid : null;
 
     if (!mention && !targetLid) {

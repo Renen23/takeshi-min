@@ -17,7 +17,7 @@ export default {
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     isReply,
     replyLid,
     remoteJid,
@@ -29,8 +29,8 @@ export default {
 
       if (isReply && replyLid) {
         targetLid = replyLid;
-      } else if (args[0]?.includes("@")) {
-        targetLid = `${onlyNumbers(args[0])}@lid`;
+      } else if (words[0]?.includes("@")) {
+        targetLid = `${onlyNumbers(words[0])}@lid`;
       } else {
         throw new InvalidParameterError(
           "Mencione um usuário ou responda a uma mensagem.",
@@ -50,7 +50,7 @@ export default {
         );
       }
 
-      const action = args[1]?.toLowerCase();
+      const action = words[1]?.toLowerCase();
       const allWarns = getAllWarns(remoteJid, targetLid);
       const invalidWarns = allWarns.filter((w) => !w.valid);
 

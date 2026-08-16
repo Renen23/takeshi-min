@@ -16,7 +16,7 @@ ${PREFIX}ban (mencionando uma mensagem)`,
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     isReply,
     socket,
     remoteJid,
@@ -27,19 +27,19 @@ ${PREFIX}ban (mencionando uma mensagem)`,
     sendErrorReply,
   }) => {
     try {
-      if (!args.length && !isReply) {
+      if (!words.length && !isReply) {
         throw new InvalidParameterError(
           "Você precisa mencionar ou marcar um membro!"
         );
       }
 
-      if (args.length && !args[0].includes("@")) {
+      if (words.length && !words[0].includes("@")) {
         throw new InvalidParameterError(
           'Você precisa mencionar um membro com "@"!'
         );
       }
 
-      const userId = args[0] ? `${onlyNumbers(args[0])}@lid` : null;
+      const userId = words[0] ? `${onlyNumbers(words[0])}@lid` : null;
 
       const memberToRemoveLid = isReply ? replyLid : userId;
 

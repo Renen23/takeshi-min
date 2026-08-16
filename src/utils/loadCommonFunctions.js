@@ -21,6 +21,7 @@ export function loadCommonFunctions({ socket, webMessage }) {
     replyLid,
     userLid,
     replyText,
+    words,
   } = extractDataFromMessage(webMessage);
 
   if (!remoteJid) {
@@ -197,6 +198,7 @@ export function loadCommonFunctions({ socket, webMessage }) {
 
   return {
     args,
+    words,
     commandName,
     fullArgs,
     fullMessage,

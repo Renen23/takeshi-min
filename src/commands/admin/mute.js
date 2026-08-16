@@ -28,7 +28,7 @@ export default {
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     remoteJid,
     replyLid,
     sendErrorReply,
@@ -40,9 +40,9 @@ export default {
       throw new DangerError("Este comando só pode ser usado em grupos.");
     }
 
-    const durationArg = args[args.length - 1];
+    const durationArg = words[words.length - 1];
     const durationMs = parseDuration(durationArg);
-    const mentionArgs = durationMs ? args.slice(0, -1) : args;
+    const mentionArgs = durationMs ? words.slice(0, -1) : words;
 
     const mention = mentionArgs.find((arg) => arg.includes("@"));
 

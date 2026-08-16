@@ -22,7 +22,7 @@ export default {
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     isReply,
     replyLid,
     remoteJid,
@@ -30,17 +30,17 @@ export default {
     sendErrorReply,
   }) => {
     try {
-      if (!args.length && !isReply) {
+      if (!words.length && !isReply) {
         throw new InvalidParameterError(
           "Mencione um usuário ou responda a uma mensagem.",
         );
       }
 
-      if (args.length && !args[0].includes("@")) {
+      if (words.length && !words[0].includes("@")) {
         throw new InvalidParameterError('Use "@" ao mencionar um usuário.');
       }
 
-      const targetLid = isReply ? replyLid : `${onlyNumbers(args[0])}@lid`;
+      const targetLid = isReply ? replyLid : `${onlyNumbers(words[0])}@lid`;
 
       if (!targetLid) {
         throw new InvalidParameterError("Membro inválido!");
@@ -55,7 +55,7 @@ export default {
         );
       }
 
-      const action = args[1]?.toLowerCase();
+      const action = words[1]?.toLowerCase();
       const allWarns = getAllWarns(remoteJid, targetLid);
       const validWarns = allWarns.filter((w) => w.valid);
 

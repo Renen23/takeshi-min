@@ -25,7 +25,7 @@ export default {
    * @param {CommandHandleProps} props
    */
   handle: async ({
-    args,
+    words,
     isReply,
     replyLid,
     remoteJid,
@@ -34,7 +34,7 @@ export default {
     sendErrorReply,
     getGroupMetadata,
   }) => {
-    const durationArg = args[args.length - 1];
+    const durationArg = words[words.length - 1];
     const durationMs = parseDuration(durationArg);
 
     if (!durationMs) {
@@ -45,7 +45,7 @@ export default {
       );
     }
 
-    const mention = args.find((arg) => arg.includes("@"));
+    const mention = words.find((arg) => arg.includes("@"));
     const targetLid = isReply ? replyLid : null;
 
     if (!mention && !targetLid) {

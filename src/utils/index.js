@@ -102,6 +102,7 @@ export function extractDataFromMessage(webMessage) {
 
   return {
     args: splitByCharacters(args.join(" "), ["\\", "|", "/"]),
+    words: splitWords(args),
     commandName: formatCommand(commandWithoutPrefix),
     fullArgs: args.join(" "),
     fullMessage,
@@ -122,6 +123,10 @@ export function splitByCharacters(str, characters) {
     .split(regex)
     .map((str) => str.trim())
     .filter(Boolean);
+}
+
+export function splitWords(args) {
+  return args.join(" ").split(/\s+/).filter(Boolean);
 }
 
 export function formatCommand(text) {
