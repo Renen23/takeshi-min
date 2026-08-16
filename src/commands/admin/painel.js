@@ -9,6 +9,7 @@ import {
   isActiveWelcomeGroup,
 } from "../../utils/database.js";
 import { toUserJid } from "../../utils/index.js";
+import { errorLog } from "../../utils/logger.js";
 
 async function sendPrivateMessage(socket, lid, text) {
   try {
@@ -18,49 +19,29 @@ async function sendPrivateMessage(socket, lid, text) {
   }
 }
 
-export default {
-  name: "painel",
-  description:
-    "Envia no seu privado um painel com o status e os comandos do grupo.",
-  commands: ["painel", "painel-admin", "paineladm", "admin-panel", "adm-panel"],
-  usage: `${PREFIX}painel`,
-  /**
-   * @param {CommandHandleProps} props
-   */
-  handle: async ({
-    socket,
-    remoteJid,
-    userLid,
-    isGroup,
-    sendReply,
-    sendErrorReply,
-  }) => {
-    if (!isGroup) {
-      throw new WarningError("Este comando só pode ser usado em grupos.");
-    }
+function status(value) {
+  return value ? "✅ Ativo" : "❌ Desativado";
+}
 
-    const metadata = await socket.groupMetadata(remoteJid);
+function buildPanel(metadata, groupJid) {
+  const subject = metadata?.subject || "Grupo";
+  const membersCount = metadata?.participants?.length || 0;
+  const prefix = getPrefix(groupJid);
 
-    const subject = metadata.subject || "Grupo";
-    const membersCount = metadata.participants?.length || 0;
-    const prefix = getPrefix(remoteJid);
+  const trusted = getTrustedUsers(groupJid);
+  const trustedCount = trusted.length;
 
-    const trusted = getTrustedUsers(remoteJid);
-    const trustedCount = trusted.length;
-
-    const status = (value) => (value ? "✅ Ativo" : "❌ Desativado");
-
-    const panel = `╭━━⪩ PAINEL DO ADM ⪨━━
+  return `╭━━⪩ PAINEL DO ADM ⪨━━
 ▢ Grupo: ${subject}
 ▢ Membros: ${membersCount}
 ▢ Prefixo: ${prefix}
 ╰━━─「🔐」─━━
 
 ╭━━⪩ STATUS DO GRUPO ⪨━━
-▢ Anti-link: ${status(isActiveAntiLinkGroup(remoteJid))}
-▢ Só admins: ${status(isActiveOnlyAdmins(remoteJid))}
-▢ Boas-vindas: ${status(isActiveWelcomeGroup(remoteJid))}
-▢ Saída: ${status(isActiveExitGroup(remoteJid))}
+▢ Anti-link: ${status(isActiveAntiLinkGroup(groupJid))}
+▢ Só admins: ${status(isActiveOnlyAdmins(groupJid))}
+▢ Boas-vindas: ${status(isActiveWelcomeGroup(groupJid))}
+▢ Saída: ${status(isActiveExitGroup(groupJid))}
 ▢ Confiáveis: ${trustedCount} pessoa(s)
 ╰━━─「📊」─━━
 
@@ -82,14 +63,118 @@ export default {
 ╰━━─「🛡️」─━━
 
 Painel enviado só pra você, admin! 😉`;
+}
+
+function isUserAdminOf(metadata, userLid) {
+  if (metadata?.owner === userLid) {
+    return true;
+  }
+
+  return metadata?.participants?.some(
+    (participant) =>
+      participant.id === userLid &&
+      (participant.admin === "admin" || participant.admin === "superadmin"),
+  );
+}
+
+async function getMyAdminGroups(socket, userLid) {
+  const allGroups = await socket.groupFetchAllParticipating();
+
+  return Object.entries(allGroups).filter(([, metadata]) =>
+    isUserAdminOf(metadata, userLid),
+  );
+}
+
+export default {
+  name: "painel",
+  description:
+    "Envia no seu privado o painel com o status e os comandos do grupo.",
+  commands: ["painel", "painel-admin", "paineladm", "admin-panel", "adm-panel"],
+  usage: `${PREFIX}painel`,
+  /**
+   * @param {CommandHandleProps} props
+   */
+  handle: async ({
+    socket,
+    remoteJid,
+    userLid,
+    isGroup,
+    args,
+    sendReply,
+    sendErrorReply,
+  }) => {
+    // Usado dentro do grupo: envia o painel do grupo no privado do admin.
+    if (isGroup) {
+      const metadata = await socket.groupMetadata(remoteJid);
+
+      try {
+        await sendPrivateMessage(
+          socket,
+          userLid,
+          buildPanel(metadata, remoteJid),
+        );
+        await sendReply("Painel do admin enviado no seu privado! 👀");
+      } catch (error) {
+        await sendErrorReply(
+          "Não consegui te chamar no privado. Abra uma conversa comigo (me manda qualquer coisa) e tente /painel de novo!",
+        );
+      }
+
+      return;
+    }
+
+    // Usado no privado (PV): procura os grupos onde o usuário é admin.
+    let groups;
 
     try {
-      await sendPrivateMessage(socket, userLid, panel);
-      await sendReply("Painel do admin enviado no seu privado! 👀");
+      groups = await getMyAdminGroups(socket, userLid);
     } catch (error) {
+      errorLog(`Erro ao buscar grupos no painel: ${error.message}`);
       await sendErrorReply(
-        "Não consegui te chamar no privado. Abra uma conversa comigo (me manda qualquer coisa) e tente /painel de novo!",
+        "Não consegui buscar seus grupos. Tente de novo em instantes.",
       );
+      return;
     }
+
+    if (!groups.length) {
+      await sendReply(
+        "Você não é administrador de nenhum grupo onde eu estou.",
+      );
+      return;
+    }
+
+    if (args[0]) {
+      const index = parseInt(args[0], 10) - 1;
+      const target = groups[index];
+
+      if (!target) {
+        await sendReply(`Escolha um número entre 1 e ${groups.length}.`);
+        return;
+      }
+
+      await sendPrivateMessage(
+        socket,
+        userLid,
+        buildPanel(target[1], target[0]),
+      );
+      return;
+    }
+
+    if (groups.length === 1) {
+      await sendPrivateMessage(
+        socket,
+        userLid,
+        buildPanel(groups[0][1], groups[0][0]),
+      );
+      return;
+    }
+
+    const list = groups
+      .map(([, metadata], index) => `${index + 1}. ${metadata?.subject || "Grupo"}`)
+      .join("\n");
+
+    await sendReply(
+      `Você é admin de ${groups.length} grupos. Envie:\n\n${PREFIX}painel <número>\n\n${list}`,
+    );
   },
 };
