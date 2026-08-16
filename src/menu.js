@@ -8,7 +8,7 @@ import { getPrefix } from "./utils/database.js";
 
 let kittenIndex = 0;
 
-const kittenImages = [1, 2, 3, 4, 5].map((n) =>
+const kittenImages = [1, 2, 3, 4].map((n) =>
   path.join(ASSETS_DIR, "images", "gatinhos", `gato-0${n}.png`),
 );
 
