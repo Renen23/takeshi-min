@@ -23,6 +23,7 @@ const WELCOME_MESSAGES_FILE = "welcome-messages";
 
 function createIfNotExists(fullPath, formatIfNotExists = []) {
   if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(databasePath, { recursive: true });
     fs.writeFileSync(fullPath, JSON.stringify(formatIfNotExists));
   }
 }
@@ -154,7 +155,7 @@ export function isActiveGroup(groupId) {
 export function muteMember(groupId, memberId) {
   const filename = MUTE_FILE;
 
-  const mutedMembers = readJSON(filename, JSON.stringify({}));
+  const mutedMembers = readJSON(filename, {});
 
   if (!mutedMembers[groupId]) {
     mutedMembers[groupId] = [];
@@ -170,7 +171,7 @@ export function muteMember(groupId, memberId) {
 export function unmuteMember(groupId, memberId) {
   const filename = MUTE_FILE;
 
-  const mutedMembers = readJSON(filename, JSON.stringify({}));
+  const mutedMembers = readJSON(filename, {});
 
   if (!mutedMembers[groupId]) {
     return;
@@ -188,7 +189,7 @@ export function unmuteMember(groupId, memberId) {
 export function checkIfMemberIsMuted(groupId, memberId) {
   const filename = MUTE_FILE;
 
-  const mutedMembers = readJSON(filename, JSON.stringify({}));
+  const mutedMembers = readJSON(filename, {});
 
   if (!mutedMembers[groupId]) {
     return false;
