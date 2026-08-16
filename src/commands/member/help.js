@@ -1,14 +1,24 @@
 import { PREFIX } from "../../config.js";
 import { formatCommand, readCommandImports } from "../../utils/index.js";
 
+const sectionNames = {
+  owner: "👑 DONO",
+  admin: "🔐 ADMINISTRAÇÃO",
+  member: "✅ COMANDOS GERAIS",
+};
+
+function permissionLabel(type) {
+  if (type === "owner") return "👑 Apenas o dono";
+  if (type === "admin") return "🔐 Dono e administradores autorizados";
+  return "✅ Dono e membros autorizados";
+}
+
 export default {
   name: "help",
-  description: "Explica os comandos (como usar, exemplos e quem pode usar).",
+  description: "Apresenta os comandos, a forma de utilização e as permissões.",
   commands: ["help", "ajuda", "comandos", "menu-help", "explicar"],
   usage: `${PREFIX}help [comando]`,
-  /**
-   * @param {CommandHandleProps} props
-   */
+
   handle: async ({ args, prefix, sendReply }) => {
     const commandImports = await readCommandImports();
 
@@ -16,70 +26,78 @@ export default {
       const targetName = formatCommand(args[0]);
 
       for (const [type, commands] of Object.entries(commandImports)) {
-        const found = commands.find((cmd) =>
-          (cmd.commands || []).map(formatCommand).includes(targetName),
+        const command = commands.find((item) =>
+          (item.commands || []).map(formatCommand).includes(targetName),
         );
 
-        if (!found) {
-          continue;
-        }
+        if (!command) continue;
 
-        const whoCan =
-          type === "owner"
-            ? "👑 Somente o dono"
-            : type === "admin"
-            ? "🔐 Dono e autorizados (/adm)"
-            : "✅ Dono e autorizados (/adm)";
+        const commandName = command.commands[0];
+        const aliases = command.commands
+          .map((alias) => `${prefix}${alias}`)
+          .join("  •  ");
 
-        const aliases = found.commands
-          .map((command) => `${prefix}${command}`)
-          .join(", ");
+        await sendReply(`╭━━━〔 📘 AJUDA DO COMANDO 〕━━━╮
+┃
+┃ 🟢 *${prefix}${commandName}*
+┃
+┃ 📝 *Função*
+┃ ${command.description || "Este comando não possui descrição."}
+┃
+┃ ⚙️ *Como utilizar*
+┃ ${command.usage || `${prefix}${commandName}`}
+┃
+┃ 👤 *Permissão*
+┃ ${permissionLabel(type)}
+┃
+┃ 🔁 *Também pode ser chamado por*
+┃ ${aliases}
+┃
+╰━━━━━━━━━━━━━━━━━━━━╯
 
-        await sendReply(
-          `📘 *${prefix}${found.commands[0]}*\n\n` +
-            `📝 *O que faz:*\n${found.description || "Sem descrição."}\n\n` +
-            `🔧 *Como usar:*\n${found.usage || `${prefix}${found.commands[0]}`}\n\n` +
-            `👤 *Quem pode usar:* ${whoCan}\n\n` +
-            `🔁 *Também funciona como:*\n${aliases}`,
-        );
+💚 Se precisar de outro comando, envie:
+${prefix}help <nome do comando>`);
         return;
       }
 
-      await sendReply(
-        `Comando "${args[0]}" não encontrado. Use ${prefix}help para ver a lista.`,
-      );
+      await sendReply(`❌ *Comando não encontrado*
+
+Não encontrei o comando *${args[0]}*.
+
+📚 Envie *${prefix}help* para consultar a lista completa.`);
       return;
     }
 
-    const labels = {
-      owner: "👑 DONO",
-      admin: "🔐 ADMIN",
-      member: "✅ BÁSICOS",
-    };
-
-    let text = `📚 *MEUS COMANDOS*\n\n`;
+    let text = `╭━━━〔 📚 LISTA DE COMANDOS 〕━━━╮
+┃
+┃ Consulte um comando específico com:
+┃ *${prefix}help <comando>*
+┃
+╰━━━━━━━━━━━━━━━━━━━━╯\n\n`;
 
     for (const type of ["owner", "admin", "member"]) {
       const commands = commandImports[type];
+      if (!commands?.length) continue;
 
-      if (!commands?.length) {
-        continue;
-      }
+      text += `╭━━━〔 ${sectionNames[type]} 〕━━━╮\n┃\n`;
 
-      text += `╭━━⪩ ${labels[type]} ⪨━━\n`;
+      for (const command of commands) {
+        const commandName = command.commands[0];
+        text += `┃ 🟢 *${prefix}${commandName}*\n`;
+        text += `┃    ${command.description || "Sem descrição disponível."}\n`;
 
-      for (const cmd of commands) {
-        text += `▢ ${prefix}${cmd.commands[0]} — ${cmd.description || ""}\n`;
-
-        if (cmd.usage && cmd.usage !== `${prefix}${cmd.commands[0]}`) {
-          text += `   🔧 ${cmd.usage}\n`;
+        if (command.usage && command.usage !== `${prefix}${commandName}`) {
+          text += `┃    ⚙️ Exemplo: ${command.usage}\n`;
         }
+
+        text += `┃\n`;
       }
 
-      text += `╰━━─┄─━━\n\n`;
+      text += `╰━━━━━━━━━━━━━━━━━━━━╯\n\n`;
     }
 
-    text += `Use ${prefix}help <comando> para ver como usar e exemplos.`;
+    text += `💚 *Renen • ${prefix}help*
+Escolha um comando acima e peça a explicação completa.`;
 
     await sendReply(text);
   },

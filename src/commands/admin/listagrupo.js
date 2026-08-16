@@ -3,25 +3,28 @@ import { getActiveGroups } from "../../utils/database.js";
 
 export default {
   name: "listagrupo",
-  description: "Mostra os grupos ativos (/on) com link para abrir.",
+  description: "Lista os grupos ativos e apresenta o respetivo link quando disponível.",
   commands: ["listagrupo", "grupos", "meus-grupos", "grupos-ativos", "grupos-on"],
   usage: `${PREFIX}listagrupo`,
-  /**
-   * @param {CommandHandleProps} props
-   */
+
   handle: async ({ socket, sendReply }) => {
     const groups = getActiveGroups();
 
     if (!groups.length) {
-      await sendReply(
-        `Nenhum grupo ativo no momento.\nAtive o bot em um grupo com ${PREFIX}on.`,
-      );
+      await sendReply(`╭━━━〔 🌐 GRUPOS ATIVOS 〕━━━╮
+┃
+┃ ℹ️ Neste momento, não existe nenhum grupo ativo.
+┃
+┃ Para ativar o bot, entre num grupo e envie:
+┃ 🟢 ${PREFIX}on
+┃
+╰━━━━━━━━━━━━━━━━━━━━╯`);
       return;
     }
 
-    const lines = [];
+    const blocks = [];
 
-    for (const groupId of groups) {
+    for (const [index, groupId] of groups.entries()) {
       let name = groupId.replace("@g.us", "");
       let link = "";
 
@@ -29,26 +32,33 @@ export default {
         const metadata = await socket.groupMetadata(groupId);
         name = metadata.subject || name;
       } catch {
-        // segue sem nome
+        // Mantém o identificador quando os dados do grupo não estão disponíveis.
       }
 
       try {
         const code = await socket.groupInviteCode(groupId);
-
-        if (code) {
-          link = `https://chat.whatsapp.com/${code}`;
-        }
+        if (code) link = `https://chat.whatsapp.com/${code}`;
       } catch {
-        // bot não é admin: sem link
+        // O grupo pode não permitir a criação ou leitura de links.
       }
 
-      lines.push(
-        link
-          ? `${lines.length + 1}. ${name}\n   ${link}`
-          : `${lines.length + 1}. ${name}`,
-      );
+      const groupNumber = index + 1;
+      const groupBlock = link
+        ? `┃ 🟢 *${groupNumber}. ${name}*\n┃ 🔗 ${link}`
+        : `┃ 🟢 *${groupNumber}. ${name}*\n┃ 🔒 Link indisponível neste momento.`;
+
+      blocks.push(`╭───〔 GRUPO ${groupNumber} 〕───╮\n${groupBlock}\n╰────────────────────╯`);
     }
 
-    await sendReply(`📋 *Grupos com o bot ativo:*\n\n${lines.join("\n")}`);
+    await sendReply(`╭━━━〔 🌐 GRUPOS COM O BOT ATIVO 〕━━━╮
+┃
+┃ Total encontrado: *${groups.length}*
+┃ Os grupos aparecem separados abaixo.
+┃
+╰━━━━━━━━━━━━━━━━━━━━╯
+
+${blocks.join("\n\n")}
+
+💚 Gestão do bot: *Renen*`);
   },
 };
