@@ -4,7 +4,7 @@
  */
 import { OWNER_LID } from "../config.js";
 import { isAdmin } from "../middlewares/index.js";
-import { isActiveAntiLinkGroup } from "./database.js";
+import { isActiveAntiLinkGroup, isTrustedUser } from "./database.js";
 import { extractDataFromMessage, onlyNumbers } from "./index.js";
 import { errorLog } from "./logger.js";
 import { addWarn, getWarnLimit } from "./warnSystem.js";
@@ -52,6 +52,10 @@ export async function handleAntiLink({ socket, webMessage }) {
     }
 
     if (userLid === OWNER_LID) {
+      return false;
+    }
+
+    if (isTrustedUser(remoteJid, userLid)) {
       return false;
     }
 

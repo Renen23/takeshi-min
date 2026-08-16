@@ -65,6 +65,7 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}welcome (1/0)
 ▢ • ${prefix}exit (1/0)
 ▢ • ${prefix}anti-link (1/0)
+▢ • ${prefix}confiavel        Lista/libera membros do anti-link
 ▢ • ${prefix}only-admin (1/0)
 ▢
 ╰━━─「⭐」─━━

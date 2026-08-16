@@ -19,6 +19,7 @@ const ANTI_LINK_GROUPS_FILE = "anti-link-groups";
 const MUTE_FILE = "muted";
 const ONLY_ADMINS_FILE = "only-admins";
 const PREFIX_GROUPS_FILE = "prefix-groups";
+const TRUSTED_USERS_FILE = "trusted-users";
 const WELCOME_GROUPS_FILE = "welcome-groups";
 const WELCOME_MESSAGES_FILE = "welcome-messages";
 
@@ -187,6 +188,56 @@ export function isActiveAntiLinkGroup(groupId) {
   const antiLinkGroups = readJSON(filename);
 
   return antiLinkGroups.includes(groupId);
+}
+
+export function addTrustedUser(groupId, userLid) {
+  const filename = TRUSTED_USERS_FILE;
+
+  const trustedUsers = readJSON(filename, {});
+
+  if (!trustedUsers[groupId]) {
+    trustedUsers[groupId] = [];
+  }
+
+  if (!trustedUsers[groupId].includes(userLid)) {
+    trustedUsers[groupId].push(userLid);
+  }
+
+  writeJSON(filename, trustedUsers, {});
+}
+
+export function removeTrustedUser(groupId, userLid) {
+  const filename = TRUSTED_USERS_FILE;
+
+  const trustedUsers = readJSON(filename, {});
+
+  if (!trustedUsers[groupId]) {
+    return;
+  }
+
+  const index = trustedUsers[groupId].indexOf(userLid);
+
+  if (index !== -1) {
+    trustedUsers[groupId].splice(index, 1);
+  }
+
+  writeJSON(filename, trustedUsers, {});
+}
+
+export function isTrustedUser(groupId, userLid) {
+  const filename = TRUSTED_USERS_FILE;
+
+  const trustedUsers = readJSON(filename, {});
+
+  return trustedUsers[groupId]?.includes(userLid) || false;
+}
+
+export function getTrustedUsers(groupId) {
+  const filename = TRUSTED_USERS_FILE;
+
+  const trustedUsers = readJSON(filename, {});
+
+  return trustedUsers[groupId] || [];
 }
 
 export function muteMember(groupId, memberId) {
