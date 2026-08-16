@@ -23,6 +23,35 @@ function getParticipantId(data) {
   return data?.id || data?.jid || data?.participant || data?.participantAlt || null;
 }
 
+async function getMemberDisplay({ data, remoteJid, socket }) {
+  const userLid = getParticipantId(data) || extractUserLid(data);
+
+  if (!userLid) {
+    return { mention: null, number: null };
+  }
+
+  const userNumber = onlyNumbers(userLid);
+
+  try {
+    const metadata = await socket.groupMetadata(remoteJid);
+
+    const participant = metadata.participants?.find(
+      (item) =>
+        onlyNumbers(item.id) === userNumber ||
+        onlyNumbers(item.lid) === userNumber,
+    );
+
+    const phoneNumber = getKnownPhoneNumber(data, participant);
+
+    return {
+      mention: participant?.id || userLid,
+      number: phoneNumber || userNumber,
+    };
+  } catch {
+    return { mention: userLid, number: userNumber };
+  }
+}
+
 function getKnownPhoneNumber(data, participant) {
   const candidates = [
     data?.phoneNumber,
@@ -99,8 +128,6 @@ export async function onGroupParticipantsUpdate({
       return;
     }
 
-    const userLid = getParticipantId(data) || extractUserLid(data);
-
     if (action === "add" && (await removeForeignParticipant({ data, remoteJid, socket }))) {
       return;
     }
@@ -114,12 +141,13 @@ export async function onGroupParticipantsUpdate({
       let finalWelcomeMessage = welcomeText;
 
       if (hasMemberMention) {
-        const userNumber = onlyNumbers(userLid);
-        finalWelcomeMessage = welcomeText.replace(
-          "@member",
-          `@${userNumber}`,
-        );
-        mentions.push(userLid);
+        const { mention, number } = await getMemberDisplay({
+          data,
+          remoteJid,
+          socket,
+        });
+        finalWelcomeMessage = welcomeText.replace("@member", `@${number}`);
+        if (mention) mentions.push(mention);
       }
 
       await socket.sendMessage(remoteJid, {
@@ -135,9 +163,13 @@ export async function onGroupParticipantsUpdate({
       let finalExitMessage = exitText;
 
       if (hasMemberMention) {
-        const userNumber = onlyNumbers(userLid);
-        finalExitMessage = exitText.replace("@member", `@${userNumber}`);
-        mentions.push(userLid);
+        const { mention, number } = await getMemberDisplay({
+          data,
+          remoteJid,
+          socket,
+        });
+        finalExitMessage = exitText.replace("@member", `@${number}`);
+        if (mention) mentions.push(mention);
       }
 
       await socket.sendMessage(remoteJid, {
