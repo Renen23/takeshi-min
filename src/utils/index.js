@@ -280,6 +280,78 @@ export async function readCommandImports() {
 
 export const onlyNumbers = (text) => text.replace(/[^0-9]/g, "");
 
+export function parseDuration(input) {
+  if (typeof input !== "string") {
+    return null;
+  }
+
+  const match = input
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+)\s*(s|m|h|d|min|minuto|minutos|hora|horas|dia|dias)?$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const value = parseInt(match[1], 10);
+
+  if (!value || value <= 0) {
+    return null;
+  }
+
+  const unit = match[2];
+
+  switch (unit) {
+    case "s":
+      return value * 1000;
+    case "":
+    case "m":
+    case "min":
+    case "minuto":
+    case "minutos":
+      return value * 60 * 1000;
+    case "h":
+    case "hora":
+    case "horas":
+      return value * 60 * 60 * 1000;
+    case "d":
+    case "dia":
+    case "dias":
+      return value * 24 * 60 * 60 * 1000;
+    default:
+      return null;
+  }
+}
+
+export function formatDuration(ms) {
+  const totalMinutes = Math.floor(ms / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const seconds = Math.floor((ms % 60000) / 1000);
+
+  const parts = [];
+
+  if (days) {
+    parts.push(`${days}d`);
+  }
+
+  if (hours) {
+    parts.push(`${hours}h`);
+  }
+
+  if (minutes) {
+    parts.push(`${minutes}m`);
+  }
+
+  if (!parts.length && seconds) {
+    parts.push(`${seconds}s`);
+  }
+
+  return parts.join(" ") || "0s";
+}
+
 export function readMore() {
   const invisibleBreak = "\u200B".repeat(950);
   return invisibleBreak;

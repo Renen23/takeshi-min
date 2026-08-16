@@ -36,11 +36,15 @@ export default {
     if (!commandWord) {
       const trusted = getTrustedUsers(remoteJid);
 
+      let text =
+        `📘 *COMO USAR O /CONFIAVEL*\n\n` +
+        `O confiável pode enviar links *sem* o anti-link punir.\n\n` +
+        `• ${PREFIX}confiavel (ver a lista)\n` +
+        `• ${PREFIX}confiavel @usuario (libera)\n` +
+        `• ${PREFIX}confiavel rm @usuario (remove)\n\n`;
+
       if (!trusted.length) {
-        await sendReply(
-          "Nenhum membro confiável cadastrado ainda.\nUse: " +
-            `${PREFIX}confiavel @usuario`,
-        );
+        await sendReply(text + `Nenhum confiável cadastrado neste grupo ainda.`);
         return;
       }
 
@@ -48,7 +52,7 @@ export default {
         .map((lid, index) => `${index + 1}. @${onlyNumbers(lid)}`)
         .join("\n");
 
-      await sendReply(`Lista de confiáveis:\n${list}`, trusted);
+      await sendReply(text + `📋 *Confiáveis deste grupo:*\n${list}`, trusted);
       return;
     }
 

@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PREFIX } from "../config.js";
+import { onlyNumbers } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,8 @@ const PREFIX_GROUPS_FILE = "prefix-groups";
 const TRUSTED_USERS_FILE = "trusted-users";
 const WELCOME_GROUPS_FILE = "welcome-groups";
 const WELCOME_MESSAGES_FILE = "welcome-messages";
+const BOT_ADMINS_FILE = "bot-admins";
+const MUTE_EXPIRATIONS_FILE = "mute-expirations";
 
 function createIfNotExists(fullPath, formatIfNotExists = []) {
   if (!fs.existsSync(fullPath)) {
@@ -249,8 +252,10 @@ export function muteMember(groupId, memberId) {
     mutedMembers[groupId] = [];
   }
 
-  if (!mutedMembers[groupId]?.includes(memberId)) {
-    mutedMembers[groupId].push(memberId);
+  const key = onlyNumbers(memberId);
+
+  if (!mutedMembers[groupId]?.includes(key)) {
+    mutedMembers[groupId].push(key);
   }
 
   writeJSON(filename, mutedMembers);
@@ -261,15 +266,15 @@ export function unmuteMember(groupId, memberId) {
 
   const mutedMembers = readJSON(filename, {});
 
+  const key = onlyNumbers(memberId);
+
   if (!mutedMembers[groupId]) {
     return;
   }
 
-  const index = mutedMembers[groupId].indexOf(memberId);
-
-  if (index !== -1) {
-    mutedMembers[groupId].splice(index, 1);
-  }
+  mutedMembers[groupId] = mutedMembers[groupId].filter(
+    (stored) => stored !== key,
+  );
 
   writeJSON(filename, mutedMembers);
 }
@@ -279,11 +284,74 @@ export function checkIfMemberIsMuted(groupId, memberId) {
 
   const mutedMembers = readJSON(filename, {});
 
-  if (!mutedMembers[groupId]) {
+  const key = onlyNumbers(memberId);
+
+  if (!mutedMembers[groupId] || !mutedMembers[groupId].includes(key)) {
     return false;
   }
 
-  return mutedMembers[groupId]?.includes(memberId);
+  const expiresAt = getMuteExpiration(groupId, key);
+
+  if (expiresAt && expiresAt <= Date.now()) {
+    unmuteMember(groupId, key);
+    removeMuteExpiration(groupId, key);
+    return false;
+  }
+
+  return true;
+}
+
+export function setMuteExpiration(groupId, memberId, expiresAt) {
+  const filename = MUTE_EXPIRATIONS_FILE;
+
+  const expirations = readJSON(filename, {});
+
+  if (!expirations[groupId]) {
+    expirations[groupId] = {};
+  }
+
+  expirations[groupId][onlyNumbers(memberId)] = expiresAt;
+
+  writeJSON(filename, expirations, {});
+}
+
+export function getMuteExpiration(groupId, memberId) {
+  const filename = MUTE_EXPIRATIONS_FILE;
+
+  const expirations = readJSON(filename, {});
+
+  return expirations[groupId]?.[onlyNumbers(memberId)] || 0;
+}
+
+export function removeMuteExpiration(groupId, memberId) {
+  const filename = MUTE_EXPIRATIONS_FILE;
+
+  const expirations = readJSON(filename, {});
+
+  if (expirations[groupId]) {
+    delete expirations[groupId][onlyNumbers(memberId)];
+  }
+
+  writeJSON(filename, expirations, {});
+}
+
+export function scheduleUnmute(groupId, memberId, expiresAt) {
+  const remaining = expiresAt - Date.now();
+
+  if (remaining <= 0) {
+    return;
+  }
+
+  setTimeout(() => {
+    try {
+      if (getMuteExpiration(groupId, memberId) <= Date.now()) {
+        unmuteMember(groupId, memberId);
+        removeMuteExpiration(groupId, memberId);
+      }
+    } catch {
+      // ignora
+    }
+  }, remaining);
 }
 
 export function activateOnlyAdmins(groupId) {
@@ -387,6 +455,56 @@ export function getExitMessage(groupId) {
   const messages = readJSON(filename, {});
 
   return messages[groupId] || null;
+}
+
+export function addBotAdmin(groupId, userLid) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, {});
+
+  if (!botAdmins[groupId]) {
+    botAdmins[groupId] = [];
+  }
+
+  const key = onlyNumbers(userLid);
+
+  if (!botAdmins[groupId].some((stored) => onlyNumbers(stored) === key)) {
+    botAdmins[groupId].push(key);
+  }
+
+  writeJSON(filename, botAdmins, {});
+}
+
+export function removeBotAdmin(groupId, userLid) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, {});
+
+  const key = onlyNumbers(userLid);
+
+  if (!botAdmins[groupId]) {
+    return;
+  }
+
+  botAdmins[groupId] = botAdmins[groupId].filter(
+    (stored) => onlyNumbers(stored) !== key,
+  );
+
+  writeJSON(filename, botAdmins, {});
+}
+
+export function getBotAdmins(groupId) {
+  const filename = BOT_ADMINS_FILE;
+
+  const botAdmins = readJSON(filename, {});
+
+  return botAdmins[groupId] || [];
+}
+
+export function isBotAdmin(groupId, userLid) {
+  const key = onlyNumbers(userLid);
+
+  return getBotAdmins(groupId).some((stored) => onlyNumbers(stored) === key);
 }
 
 export function resetExitMessage(groupId) {

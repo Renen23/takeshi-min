@@ -43,6 +43,7 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}on
 ▢ • ${prefix}off
 ▢ • ${prefix}set-prefix
+▢ • ${prefix}adm
 ▢
 ╰━━─「👑」─━━
 
@@ -74,10 +75,13 @@ export function menuMessage(groupJid) {
 ╭━━⪩ PRINCIPAL ⪨━━
 ▢
 ▢ • ${prefix}menu
+▢ • ${prefix}help [comando]
 ▢ • ${prefix}ping
 ▢ • ${prefix}meu-lid
 ▢
 ╰━━─「🐶」─━━
+
+⚠️ Só o dono (e quem ele liberar com ${prefix}adm) usa meus comandos.
 
 Feito com carinho por Renen • ${BOT_EMOJI} ${BOT_NAME}`;
 }

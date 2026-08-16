@@ -1,6 +1,7 @@
 import { PREFIX } from "../../config.js";
 import { WarningError } from "../../errors/index.js";
 import {
+  getBotAdmins,
   getPrefix,
   getTrustedUsers,
   isActiveAntiLinkGroup,
@@ -8,7 +9,7 @@ import {
   isActiveOnlyAdmins,
   isActiveWelcomeGroup,
 } from "../../utils/database.js";
-import { toUserJid } from "../../utils/index.js";
+import { onlyNumbers, toUserJid } from "../../utils/index.js";
 import { errorLog } from "../../utils/logger.js";
 
 async function sendPrivateMessage(socket, lid, text) {
@@ -30,6 +31,8 @@ function buildPanel(metadata, groupJid) {
 
   const trusted = getTrustedUsers(groupJid);
   const trustedCount = trusted.length;
+  const botAdmins = getBotAdmins(groupJid);
+  const botAdminsCount = botAdmins.length;
 
   return `╭━━⪩ PAINEL DO ADM ⪨━━
 ▢ Grupo: ${subject}
@@ -43,11 +46,12 @@ function buildPanel(metadata, groupJid) {
 ▢ Boas-vindas: ${status(isActiveWelcomeGroup(groupJid))}
 ▢ Saída: ${status(isActiveExitGroup(groupJid))}
 ▢ Confiáveis: ${trustedCount} pessoa(s)
+▢ Autorizados (/adm): ${botAdminsCount} pessoa(s)
 ╰━━─「📊」─━━
 
 ╭━━⪩ MODERAÇÃO ⪨━━
 ▢ ${prefix}ban / ${prefix}promover / ${prefix}rebaixar
-▢ ${prefix}mute / ${prefix}unmute
+▢ ${prefix}mute / ${prefix}unmute / ${prefix}adv 30m
 ▢ ${prefix}warn / ${prefix}unwarn
 ▢ ${prefix}delete / ${prefix}limpar-chat
 ▢ ${prefix}abrir / ${prefix}fechar / ${prefix}link-grupo
@@ -66,13 +70,13 @@ Painel enviado só pra você, admin! 😉`;
 }
 
 function isUserAdminOf(metadata, userLid) {
-  if (metadata?.owner === userLid) {
+  if (onlyNumbers(metadata?.owner) === onlyNumbers(userLid)) {
     return true;
   }
 
   return metadata?.participants?.some(
     (participant) =>
-      participant.id === userLid &&
+      onlyNumbers(participant.id) === onlyNumbers(userLid) &&
       (participant.admin === "admin" || participant.admin === "superadmin"),
   );
 }

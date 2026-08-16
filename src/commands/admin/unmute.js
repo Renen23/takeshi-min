@@ -6,7 +6,11 @@
  */
 import { PREFIX } from "../../config.js";
 import { DangerError, WarningError } from "../../errors/index.js";
-import { checkIfMemberIsMuted, unmuteMember } from "../../utils/database.js";
+import {
+  checkIfMemberIsMuted,
+  removeMuteExpiration,
+  unmuteMember,
+} from "../../utils/database.js";
 
 export default {
   name: "unmute",
@@ -34,6 +38,7 @@ export default {
       throw new WarningError("Este usuário não está silenciado!");
     }
     unmuteMember(remoteJid, userId);
+    removeMuteExpiration(remoteJid, userId);
     await sendSuccessReply("Usuário desmutado com sucesso!");
   },
 };
