@@ -41,7 +41,10 @@ export default {
         throw new InvalidParameterError("Membro inválido!");
       }
 
-      if (targetLid === BOT_LID || targetLid === OWNER_LID) {
+      if (
+        onlyNumbers(targetLid) === onlyNumbers(BOT_LID) ||
+        onlyNumbers(targetLid) === onlyNumbers(OWNER_LID)
+      ) {
         throw new DangerError(
           "Não é possível alterar advertências deste usuário.",
         );

@@ -51,7 +51,7 @@ export async function handleAntiLink({ socket, webMessage }) {
       return false;
     }
 
-    if (userLid === OWNER_LID) {
+    if (onlyNumbers(userLid) === onlyNumbers(OWNER_LID)) {
       return false;
     }
 

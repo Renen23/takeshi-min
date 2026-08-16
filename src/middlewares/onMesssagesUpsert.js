@@ -12,6 +12,7 @@ import {
   GROUP_PARTICIPANT_LEAVE,
   isAddOrLeave,
   isAtLeastMinutesInPast,
+  onlyNumbers,
 } from "../utils/index.js";
 import { loadCommonFunctions } from "../utils/loadCommonFunctions.js";
 import { errorLog, infoLog } from "../utils/logger.js";
@@ -35,6 +36,17 @@ export async function onMessagesUpsert({ socket, messages, startProcess }) {
     }
 
     try {
+      const senderNumber =
+        onlyNumbers(webMessage?.key?.participant) ||
+        onlyNumbers(webMessage?.key?.remoteJid);
+
+      const receivedText =
+        webMessage?.message?.conversation ||
+        webMessage?.message?.extendedTextMessage?.text ||
+        "(sem texto)";
+
+      console.log(`[MSG] user=${senderNumber} | ${receivedText}`);
+
       if (!webMessage?.key?.remoteJid?.endsWith("@g.us")) {
         continue;
       }

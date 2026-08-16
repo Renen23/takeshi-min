@@ -4,6 +4,7 @@
 import { delay } from "baileys";
 import { OWNER_LID } from "../config.js";
 import { getPrefix } from "../utils/database.js";
+import { onlyNumbers } from "../utils/index.js";
 
 export function verifyPrefix(prefix, groupJid) {
   const groupPrefix = getPrefix(groupJid);
@@ -17,15 +18,23 @@ export function hasTypeAndCommand({ type, command }) {
 export async function isAdmin({ remoteJid, userLid, socket }) {
   const { participants, owner } = await socket.groupMetadata(remoteJid);
 
+  const userNumber = onlyNumbers(userLid);
+  const ownerNumber = onlyNumbers(OWNER_LID);
+
+  if (userNumber === ownerNumber) {
+    return true;
+  }
+
   const participant = participants.find(
-    (participant) => participant.id === userLid,
+    (participant) => onlyNumbers(participant.id) === userNumber,
   );
 
   if (!participant) {
-    return userLid === OWNER_LID;
+    return false;
   }
 
-  const isOwner = userLid === owner || participant.admin === "superadmin";
+  const isOwner = onlyNumbers(participant.id) === onlyNumbers(owner) ||
+    participant.admin === "superadmin";
 
   const isAdmin = participant.admin === "admin";
 
@@ -33,7 +42,7 @@ export async function isAdmin({ remoteJid, userLid, socket }) {
 }
 
 export function isBotOwner({ userLid }) {
-  return userLid === OWNER_LID;
+  return onlyNumbers(userLid) === onlyNumbers(OWNER_LID);
 }
 
 export async function checkPermission({ type, socket, userLid, remoteJid }) {
@@ -46,22 +55,29 @@ export async function checkPermission({ type, socket, userLid, remoteJid }) {
 
     const { participants, owner } = await socket.groupMetadata(remoteJid);
 
+    const userNumber = onlyNumbers(userLid);
+    const ownerNumber = onlyNumbers(OWNER_LID);
+    const groupOwnerNumber = onlyNumbers(owner);
+
+    if (userNumber === ownerNumber) {
+      return true;
+    }
+
     const participant = participants.find(
-      (participant) => participant.id === userLid,
+      (participant) => onlyNumbers(participant.id) === userNumber,
     );
 
     if (!participant) {
       return false;
     }
 
-    const isBotOwner = userLid === OWNER_LID;
-
-    const isOwner = userLid === owner || participant.admin === "superadmin";
+    const isOwner = onlyNumbers(participant.id) === groupOwnerNumber ||
+      participant.admin === "superadmin";
 
     const isAdmin = isOwner || participant.admin === "admin";
 
     const ownerStillInGroup = participants.some(
-      (participant) => participant.id === owner,
+      (participant) => onlyNumbers(participant.id) === groupOwnerNumber,
     );
 
     const hasSuperAdmin = participants.some(
@@ -69,14 +85,10 @@ export async function checkPermission({ type, socket, userLid, remoteJid }) {
     );
 
     if (type === "admin") {
-      return isOwner || isAdmin || isBotOwner;
+      return isOwner || isAdmin;
     }
 
     if (type === "owner") {
-      if (isBotOwner) {
-        return true;
-      }
-
       if (isOwner) {
         return true;
       }

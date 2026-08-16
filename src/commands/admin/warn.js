@@ -38,11 +38,14 @@ export default {
         throw new InvalidParameterError("Membro inválido!");
       }
 
-      if (targetLid === userLid) {
+      if (onlyNumbers(targetLid) === onlyNumbers(userLid)) {
         throw new DangerError("Você não pode se advertir!");
       }
 
-      if (targetLid === BOT_LID || targetLid === OWNER_LID) {
+      if (
+        onlyNumbers(targetLid) === onlyNumbers(BOT_LID) ||
+        onlyNumbers(targetLid) === onlyNumbers(OWNER_LID)
+      ) {
         throw new DangerError("Não é possível advertir este usuário.");
       }
 

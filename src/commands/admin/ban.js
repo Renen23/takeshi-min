@@ -47,17 +47,23 @@ ${PREFIX}ban (mencionando uma mensagem)`,
         throw new InvalidParameterError("Membro inválido!");
       }
 
-      if (memberToRemoveLid === userLid) {
+      if (onlyNumbers(memberToRemoveLid) === onlyNumbers(userLid)) {
         throw new DangerError("Você não pode remover você mesmo!");
       }
 
       const resolvedOwnerLid = OWNER_LID;
 
-      if (resolvedOwnerLid && memberToRemoveLid === resolvedOwnerLid) {
+      if (
+        resolvedOwnerLid &&
+        onlyNumbers(memberToRemoveLid) === onlyNumbers(resolvedOwnerLid)
+      ) {
         throw new DangerError("Você não pode remover o dono do bot!");
       }
 
-      if (BOT_LID && memberToRemoveLid === BOT_LID) {
+      if (
+        BOT_LID &&
+        onlyNumbers(memberToRemoveLid) === onlyNumbers(BOT_LID)
+      ) {
         throw new DangerError("Você não pode me remover!");
       }
 

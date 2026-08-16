@@ -45,17 +45,17 @@ export default {
 
     const targetUserNumber = onlyNumbers(userId);
 
-    if (OWNER_LID && userId === OWNER_LID) {
+    if (OWNER_LID && onlyNumbers(userId) === onlyNumbers(OWNER_LID)) {
       throw new DangerError("Você não pode mutar o dono do bot!");
     }
 
-    if (BOT_LID && userId === BOT_LID) {
+    if (BOT_LID && onlyNumbers(userId) === onlyNumbers(BOT_LID)) {
       throw new DangerError("Você não pode mutar o bot.");
     }
 
     const groupMetadata = await getGroupMetadata();
     const isUserInGroup = groupMetadata.participants.some(
-      (participant) => participant.id === userId
+      (participant) => onlyNumbers(participant.id) === onlyNumbers(userId)
     );
 
     if (!isUserInGroup) {
@@ -66,7 +66,8 @@ export default {
     }
 
     const isTargetAdmin = groupMetadata.participants.some(
-      (participant) => participant.id === userId && participant.admin
+      (participant) =>
+        onlyNumbers(participant.id) === onlyNumbers(userId) && participant.admin
     );
 
     if (isTargetAdmin) {

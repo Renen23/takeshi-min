@@ -7,16 +7,16 @@ import { ASSETS_DIR, BOT_EMOJI, BOT_NAME } from "./config.js";
 import { getPrefix } from "./utils/database.js";
 import { readMore } from "./utils/index.js";
 
-let kittenIndex = 0;
+let dogIndex = 0;
 
-const kittenImages = [1, 2, 3, 4].map((n) =>
-  path.join(ASSETS_DIR, "images", "gatinhos", `gato-0${n}.png`),
+const dogImages = [1, 2, 3, 4].map((n) =>
+  path.join(ASSETS_DIR, "images", "cachorros", `cachorro-0${n}.png`),
 );
 
-export function getNextKitten() {
-  const selectedImage = kittenImages[kittenIndex];
+export function getNextDog() {
+  const selectedImage = dogImages[dogIndex];
 
-  kittenIndex = (kittenIndex + 1) % kittenImages.length;
+  dogIndex = (dogIndex + 1) % dogImages.length;
 
   return selectedImage;
 }
@@ -77,7 +77,7 @@ export function menuMessage(groupJid) {
 ▢ • ${prefix}ping
 ▢ • ${prefix}meu-lid
 ▢
-╰━━─「🐱」─━━
+╰━━─「🐶」─━━
 
 Feito com carinho por Renen • ${BOT_EMOJI} ${BOT_NAME}`;
 }

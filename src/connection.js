@@ -96,7 +96,7 @@ export async function connect() {
     maxMsgRetryCount: 5,
     markOnlineOnConnect: true,
     syncFullHistory: false,
-    emitOwnEvents: false,
+    emitOwnEvents: true,
     msgRetryCounterCache,
     shouldSyncHistoryMessage: () => false,
   });

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ASSETS_DIR, PREFIX } from "../../config.js";
-import { getNextKitten, menuMessage } from "../../menu.js";
+import { getNextDog, menuMessage } from "../../menu.js";
 
 export default {
   name: "menu",
@@ -14,7 +14,7 @@ export default {
   handle: async ({ remoteJid, sendSuccessReact, sendImageFromFile }) => {
     await sendSuccessReact();
 
-    let imagePath = getNextKitten();
+    let imagePath = getNextDog();
 
     if (!fs.existsSync(imagePath)) {
       imagePath = path.join(ASSETS_DIR, "images", "takeshi-bot.png");
