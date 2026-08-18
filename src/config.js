@@ -1,30 +1,23 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
-
 // Prefixo padrão dos comandos.
-export const PREFIX = process.env.PREFIX || "/";
+export const PREFIX = "/";
 
 // Emoji do bot (mude se preferir).
-export const BOT_EMOJI = process.env.BOT_EMOJI || "🤖";
+export const BOT_EMOJI = "🤖";
 
 // Nome do bot (mude se preferir).
-export const BOT_NAME = process.env.BOT_NAME || "Renen";
+export const BOT_NAME = "Renen";
 
 // LID do bot (no caso, o que você rodará o bot).
-// Para obter o LID do bot, use o comando <prefixo>lid respondendo em cima de uma mensagem do número do bot
-// Troque o <prefixo> pelo prefixo do bot (ex: /lid).
-export const BOT_LID = process.env.BOT_LID || "266820598685815@lid";
+export const BOT_LID = "266820598685815@lid";
 
 // LID do dono do bot (no caso, o seu!).
-// Para obter o LID do dono do bot, use o comando <prefixo>meu-lid
-// Troque o <prefixo> pelo prefixo do bot (ex: /meu-lid).
-export const OWNER_LID = process.env.OWNER_LID || "266820598685815@lid";
+export const OWNER_LID = "266820598685815@lid";
 
 // Diretório dos comandos
 export const COMMANDS_DIR = path.join(__dirname, "commands");
