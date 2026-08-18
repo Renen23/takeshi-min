@@ -1,5 +1,5 @@
 node_modules/
-assets/auth/
-assets/temp/
-assets/temp/wa-logs.txt
+.env
 database/
+assets/temp/
+auth_info/
